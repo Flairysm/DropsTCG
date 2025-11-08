@@ -8,7 +8,7 @@ export default function Index() {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: '#0a0019',
+        backgroundColor: '#150133',
       }}
     >
       <Text style={{ color: '#ffffff' }}>Hi</Text>

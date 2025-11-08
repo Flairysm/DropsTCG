@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 const play = () => {
   return (
-    <View style={{ flex: 1, backgroundColor: '#0a0019' }}>
+    <View style={{ flex: 1, backgroundColor: '#150133' }}>
       
     </View>
   );
