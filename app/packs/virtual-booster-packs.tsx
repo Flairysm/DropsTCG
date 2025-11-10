@@ -134,7 +134,6 @@ export default function VirtualBoosterPacks() {
     if (!selectedPack) return;
     const qty = parseInt(quantity) || 1;
     // TODO: Implement purchase logic via API
-    console.log(`Purchasing ${qty} ${selectedPack.name} for ${selectedPack.price * qty} tokens`);
     setShowPurchaseModal(false);
     setSelectedPack(null);
     setQuantity('1');

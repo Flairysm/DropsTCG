@@ -144,7 +144,6 @@ export default function MysteryBoxes() {
     if (!selectedBox) return;
     const qty = parseInt(quantity) || 1;
     // TODO: Implement purchase logic via API
-    console.log(`Purchasing ${qty} ${selectedBox.name} for ${selectedBox.price * qty} tokens`);
     setShowPurchaseModal(false);
     setSelectedBox(null);
     setQuantity('1');

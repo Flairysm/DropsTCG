@@ -18,7 +18,7 @@ interface RaffleEvent {
   };
   totalSlots: number;
   filledSlots: number;
-  tokensPerSlot: number; // Price in tokens (RM1 = 20 tokens)
+  tokensPerSlot: number;
   isActive: boolean;
 }
 
@@ -50,7 +50,7 @@ const RaffleEventsSection: React.FC<RaffleEventsSectionProps> = ({ raffles }) =>
       },
       totalSlots: 100,
       filledSlots: 45,
-      tokensPerSlot: 200, // 200 tokens = RM10 (RM1 = 20 tokens)
+      tokensPerSlot: 200,
       isActive: true,
     },
     {
@@ -66,7 +66,7 @@ const RaffleEventsSection: React.FC<RaffleEventsSectionProps> = ({ raffles }) =>
       },
       totalSlots: 50,
       filledSlots: 32,
-      tokensPerSlot: 400, // 400 tokens = RM20 (RM1 = 20 tokens)
+      tokensPerSlot: 400,
       isActive: true,
     },
   ];

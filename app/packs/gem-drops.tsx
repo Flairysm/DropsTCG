@@ -165,7 +165,6 @@ export default function GemDrops() {
     if (!selectedGem) return;
     const qty = parseInt(quantity) || 1;
     // TODO: Implement purchase logic via API
-    console.log(`Purchasing ${qty} ${selectedGem.name} for ${selectedGem.price * qty} tokens`);
     setShowPurchaseModal(false);
     setSelectedGem(null);
     setQuantity('1');

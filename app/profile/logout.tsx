@@ -12,7 +12,6 @@ export default function Logout() {
   const handleLogout = () => {
     // TODO: Implement logout logic
     // Clear user session, tokens, etc.
-    console.log('User logged out');
     setShowConfirmModal(false);
     // Navigate to login or home
     router.replace('/(tabs)/index');

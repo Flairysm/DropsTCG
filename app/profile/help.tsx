@@ -33,7 +33,6 @@ export default function Help() {
       icon: 'chatbubbles-outline',
       action: () => {
         // TODO: Open live chat
-        console.log('Open live chat');
       },
     },
     {
@@ -52,7 +51,6 @@ export default function Help() {
       icon: 'school-outline',
       action: () => {
         // TODO: Open tutorials
-        console.log('Open tutorials');
       },
     },
   ];

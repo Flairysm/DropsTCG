@@ -167,7 +167,6 @@ export default function Vault() {
           prevCards.filter(card => !selectedCards.has(card.id))
         );
         // TODO: Add tokens back to user's balance via API
-        console.log('Refunding cards:', Array.from(selectedCards));
       } else if (actionType === 'ship') {
         // TODO: Implement shipment logic (mark as shipped, create order, etc.)
         // For now, we can remove shipped cards or mark them differently
@@ -175,7 +174,6 @@ export default function Vault() {
         setUserCards(prevCards => 
           prevCards.filter(card => !selectedCards.has(card.id))
         );
-        console.log('Shipping cards:', Array.from(selectedCards));
       }
       setShowActionModal(false);
       setSelectedCards(new Set());

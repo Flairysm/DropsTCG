@@ -60,7 +60,6 @@ export default function RaffleDetails() {
 
   const handlePurchase = () => {
     // TODO: Implement purchase logic via API
-    console.log(`Purchasing ${slotsToBuy} slots for ${totalCost} tokens`);
     setShowPurchaseModal(false);
     // Show success message and update raffle state
   };
@@ -141,9 +140,6 @@ export default function RaffleDetails() {
                 {raffle.tokensPerSlot.toLocaleString()} tokens per slot
               </Text>
             </View>
-            <Text style={styles.priceSubtext}>
-              RM{(raffle.tokensPerSlot / 20).toFixed(2)} per slot (RM1 = 20 tokens)
-            </Text>
           </View>
 
           {/* Prizes Section */}
@@ -420,12 +416,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#40ffdc',
     marginLeft: 8,
-  },
-  priceSubtext: {
-    fontSize: 12,
-    color: '#ffffff',
-    opacity: 0.6,
-    marginLeft: 28,
   },
   prizesSection: {
     backgroundColor: '#12042b',

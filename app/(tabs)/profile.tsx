@@ -84,7 +84,6 @@ export default function Profile() {
   const handleMenuPress = (item: typeof menuItems[0]) => {
     if (item.id === 'logout') {
       // Handle logout - show confirmation modal or directly logout
-      console.log('Logout pressed');
       // TODO: Implement logout logic
       return;
     }

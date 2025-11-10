@@ -358,7 +358,6 @@ export default function PackInfo() {
 
   const handlePurchase = () => {
     // TODO: Implement purchase logic via API
-    console.log(`Purchasing ${quantityNum} ${gem.name} for ${totalCost} tokens`);
     setShowPurchaseModal(false);
     // Show success message and update gem state
   };

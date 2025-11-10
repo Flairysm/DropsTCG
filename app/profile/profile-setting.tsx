@@ -13,7 +13,6 @@ export default function ProfileSetting() {
 
   const handleSave = () => {
     // TODO: Save profile changes to API
-    console.log('Profile saved:', { username, email, phone });
     router.back();
   };
 

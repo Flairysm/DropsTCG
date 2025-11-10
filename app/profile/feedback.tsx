@@ -13,7 +13,6 @@ export default function Feedback() {
 
   const handleSubmit = () => {
     // TODO: Submit feedback to API
-    console.log('Feedback submitted:', { feedback, rating });
     setShowSuccessModal(true);
     setFeedback('');
     setRating(null);

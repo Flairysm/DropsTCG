@@ -59,7 +59,6 @@ export default function Reload() {
     }
 
     // TODO: Implement payment processing
-    console.log(`Reloading ${tokens} tokens for RM${rm}`);
     // After successful payment, update token balance
   };
 
