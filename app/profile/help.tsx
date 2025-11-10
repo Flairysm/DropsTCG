@@ -42,7 +42,7 @@ export default function Help() {
       description: 'Browse frequently asked questions',
       icon: 'help-circle-outline',
       action: () => {
-        router.push('/faq');
+        router.push('/profile/faq');
       },
     },
     {

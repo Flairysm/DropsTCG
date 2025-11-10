@@ -124,7 +124,7 @@ const MysteryBoxesSection: React.FC<MysteryBoxesSectionProps> = ({ boxes }) => {
                 styles.boxCard,
                 index === displayBoxes.length - 1 && styles.lastCard
               ]}
-              onPress={() => router.push(`/pack-info?type=mystery-box&id=${box.id}` as any)}
+              onPress={() => router.push(`/packs/pack-info?type=mystery-box&id=${box.id}` as any)}
               activeOpacity={0.8}
             >
               {/* Box Icon Header */}

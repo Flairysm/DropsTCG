@@ -173,7 +173,7 @@ const RaffleEventsSection: React.FC<RaffleEventsSectionProps> = ({ raffles }) =>
                   <TouchableOpacity 
                     style={styles.viewDetailsButton}
                     onPress={() => {
-                      router.push(`/raffle-details?id=${raffle.id}` as any);
+                      router.push(`/packs/raffle-details?id=${raffle.id}` as any);
                     }}
                   >
                     <Text style={styles.viewDetailsText}>View Details</Text>

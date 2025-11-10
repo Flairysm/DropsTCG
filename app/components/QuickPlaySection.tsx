@@ -34,7 +34,7 @@ const QuickPlaySection: React.FC<QuickPlaySectionProps> = ({ onPress }) => {
       title: 'Mystery Boxes',
       icon: 'cube',
       description: 'Open themed mystery boxes',
-      route: '/mystery-boxes', // Future route
+      route: '/packs/mystery-boxes', // Future route
     },
   ];
 

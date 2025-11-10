@@ -90,7 +90,7 @@ export default function Raffles() {
             <TouchableOpacity
               key={raffle.id}
               style={styles.raffleCard}
-              onPress={() => router.push(`/raffle-details?id=${raffle.id}` as any)}
+              onPress={() => router.push(`/packs/raffle-details?id=${raffle.id}` as any)}
               activeOpacity={0.8}
             >
               <View style={styles.raffleHeader}>

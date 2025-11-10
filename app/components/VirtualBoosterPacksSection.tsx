@@ -110,7 +110,7 @@ const VirtualBoosterPacksSection: React.FC<VirtualBoosterPacksSectionProps> = ({
                 styles.packCard,
                 index === displayPacks.length - 1 && styles.lastCard
               ]}
-              onPress={() => router.push(`/pack-info?type=booster-pack&id=${pack.id}` as any)}
+              onPress={() => router.push(`/packs/pack-info?type=booster-pack&id=${pack.id}` as any)}
               activeOpacity={0.8}
             >
               {/* Pack Icon Header */}

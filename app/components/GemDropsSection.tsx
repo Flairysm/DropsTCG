@@ -137,7 +137,7 @@ const GemDropsSection: React.FC<GemDropsSectionProps> = ({ drops }) => {
                 styles.dropCard,
                 index === displayDrops.length - 1 && styles.lastCard
               ]}
-              onPress={() => router.push(`/pack-info?id=${drop.id}` as any)}
+              onPress={() => router.push(`/packs/pack-info?id=${drop.id}` as any)}
               activeOpacity={0.8}
             >
               {/* Gem Icon Header */}
