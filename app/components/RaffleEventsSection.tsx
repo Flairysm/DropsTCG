@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 interface Prize {
   position: number; // 1, 2, 3 for main prizes
@@ -32,6 +33,8 @@ const CARD_MARGIN = 16; // Space between cards
 const CARD_WIDTH = (SCREEN_WIDTH - (HORIZONTAL_PADDING * 2) - CARD_MARGIN) / 1.5;
 
 const RaffleEventsSection: React.FC<RaffleEventsSectionProps> = ({ raffles }) => {
+  const router = useRouter();
+  
   // Sample raffle data - replace with real data from your API/state
   const defaultRaffles: RaffleEvent[] = [
     {
@@ -170,8 +173,7 @@ const RaffleEventsSection: React.FC<RaffleEventsSectionProps> = ({ raffles }) =>
                   <TouchableOpacity 
                     style={styles.viewDetailsButton}
                     onPress={() => {
-                      // TODO: Navigate to raffle detail screen
-                      console.log('View details for raffle:', raffle.id);
+                      router.push(`/raffle-details?id=${raffle.id}` as any);
                     }}
                   >
                     <Text style={styles.viewDetailsText}>View Details</Text>
@@ -189,13 +191,13 @@ const RaffleEventsSection: React.FC<RaffleEventsSectionProps> = ({ raffles }) =>
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingTop: 32,
+    paddingBottom: 32,
     position: 'relative',
   },
   header: {
     paddingHorizontal: HORIZONTAL_PADDING,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   titleContainer: {
     flexDirection: 'row',

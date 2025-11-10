@@ -169,13 +169,13 @@ const RecentPullsSection: React.FC<RecentPullsSectionProps> = ({ pulls }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingTop: 32,
+    paddingBottom: 32,
     position: 'relative',
   },
   header: {
     paddingHorizontal: HORIZONTAL_PADDING,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   titleContainer: {
     flexDirection: 'row',

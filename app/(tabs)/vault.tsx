@@ -497,8 +497,17 @@ export default function Vault() {
             disabled={!hasSelection || !canShipSelected}
             activeOpacity={0.7}
           >
-            <Ionicons name="cube-outline" size={20} color="#ffffff" />
-            <Text style={styles.actionBarButtonText}>Ship</Text>
+            <Ionicons 
+              name="cube-outline" 
+              size={20} 
+              color={(!hasSelection || !canShipSelected) ? "#ffffff" : "#0a0019"} 
+            />
+            <Text style={[
+              styles.actionBarButtonText,
+              (!hasSelection || !canShipSelected) ? {} : styles.shipButtonText
+            ]}>
+              Ship
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -904,6 +913,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#ffffff',
+  },
+  shipButtonText: {
+    color: '#0a0019',
   },
   modalOverlay: {
     flex: 1,

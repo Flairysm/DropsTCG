@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function Profile() {
+  const router = useRouter();
   // Sample user data - replace with actual user data from your API/state
   const userData = {
     username: 'Player123',
@@ -80,8 +82,13 @@ export default function Profile() {
   ];
 
   const handleMenuPress = (item: typeof menuItems[0]) => {
-    // TODO: Navigate to route
-    console.log('Navigate to:', item.route);
+    if (item.id === 'logout') {
+      // Handle logout - show confirmation modal or directly logout
+      console.log('Logout pressed');
+      // TODO: Implement logout logic
+      return;
+    }
+    router.push(item.route as any);
   };
 
   return (

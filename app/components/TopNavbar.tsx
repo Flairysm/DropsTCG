@@ -11,6 +11,7 @@ const menuItems = [
   { name: 'Play', route: '/(tabs)/play', icon: 'game-controller' },
   { name: 'Vault', route: '/(tabs)/vault', icon: 'cube' },
   { name: 'Profile', route: '/(tabs)/profile', icon: 'person' },
+  { name: 'Admin', route: '/admin', icon: 'shield' },
 ];
 
 const TopNavbar: React.FC = () => {

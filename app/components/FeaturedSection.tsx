@@ -105,12 +105,12 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ events }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 16,
-    paddingBottom: 24,
+    paddingTop: 24,
+    paddingBottom: 32,
   },
   header: {
     paddingHorizontal: HORIZONTAL_PADDING,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   titleContainer: {
     flexDirection: 'row',

@@ -1,13 +1,20 @@
 import React from 'react';
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 interface GemDrop {
   id: string;
   name: string;
+  gemType: string;
   description: string;
   price: number; // in tokens
-  image?: string;
+  cardTierRange: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  icon: string;
+  color: string;
+  remainingBoxes: number;
+  totalBoxes: number;
 }
 
 interface GemDropsSectionProps {
@@ -20,28 +27,88 @@ const CARD_MARGIN = 16;
 const CARD_WIDTH = (SCREEN_WIDTH - (HORIZONTAL_PADDING * 2) - CARD_MARGIN) / 1.5;
 
 const GemDropsSection: React.FC<GemDropsSectionProps> = ({ drops }) => {
+  const router = useRouter();
+  
   const defaultDrops: GemDrop[] = [
     {
-      id: '1',
-      name: 'Premium Gem Drop',
-      description: 'Exclusive rare gems',
-      price: 500, // tokens
+      id: 'diamond',
+      name: 'Diamond Drops',
+      gemType: 'Diamond',
+      description: 'Mid-range cards with guaranteed chase cards',
+      price: 1000,
+      cardTierRange: 'B-S',
+      rarity: 'common',
+      icon: 'diamond',
+      color: '#B9F2FF',
+      remainingBoxes: 756,
+      totalBoxes: 1000,
     },
     {
-      id: '2',
-      name: 'Standard Gem Drop',
-      description: 'Quality gem collection',
-      price: 300,
+      id: 'emerald',
+      name: 'Emerald Drops',
+      gemType: 'Emerald',
+      description: 'Higher tier cards with increased chances',
+      price: 2000,
+      cardTierRange: 'A-SS',
+      rarity: 'uncommon',
+      icon: 'leaf',
+      color: '#50C878',
+      remainingBoxes: 342,
+      totalBoxes: 500,
     },
     {
-      id: '3',
-      name: 'Starter Gem Drop',
-      description: 'Perfect for beginners',
-      price: 200,
+      id: 'ruby',
+      name: 'Ruby Drops',
+      gemType: 'Ruby',
+      description: 'Premium cards with guaranteed high-tier pulls',
+      price: 5000,
+      cardTierRange: 'S-SS',
+      rarity: 'rare',
+      icon: 'flame',
+      color: '#E0115F',
+      remainingBoxes: 89,
+      totalBoxes: 200,
+    },
+    {
+      id: 'sapphire',
+      name: 'Sapphire Drops',
+      gemType: 'Sapphire',
+      description: 'Ultra-premium drops with finest cards',
+      price: 7500,
+      cardTierRange: 'SS-SSS',
+      rarity: 'epic',
+      icon: 'water',
+      color: '#0F52BA',
+      remainingBoxes: 45,
+      totalBoxes: 150,
+    },
+    {
+      id: 'obsidian',
+      name: 'Obsidian Drops',
+      gemType: 'Obsidian',
+      description: 'The ultimate gem drop - all premium chase cards',
+      price: 10000,
+      cardTierRange: 'SSS only',
+      rarity: 'legendary',
+      icon: 'moon',
+      color: '#000000',
+      remainingBoxes: 12,
+      totalBoxes: 100,
     },
   ];
 
   const displayDrops = drops || defaultDrops;
+
+  const getRarityColor = (rarity: string): string => {
+    switch (rarity) {
+      case 'common': return '#40ffdc';
+      case 'uncommon': return '#50C878';
+      case 'rare': return '#E0115F';
+      case 'epic': return '#0F52BA';
+      case 'legendary': return '#FFD700';
+      default: return '#40ffdc';
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -61,38 +128,50 @@ const GemDropsSection: React.FC<GemDropsSectionProps> = ({ drops }) => {
         snapToAlignment="start"
         decelerationRate="fast"
       >
-        {displayDrops.map((drop, index) => (
-          <TouchableOpacity
-            key={drop.id}
-            style={[
-              styles.dropCard,
-              index === displayDrops.length - 1 && styles.lastCard
-            ]}
-          >
-            {/* Drop Image Placeholder */}
-            <View style={styles.dropImageContainer}>
-              <Ionicons name="diamond" size={48} color="#40ffdc" />
-              <Text style={styles.dropPlaceholderText}>{drop.name}</Text>
-            </View>
-
-            {/* Drop Info */}
-            <View style={styles.dropInfo}>
-              <Text style={styles.dropName} numberOfLines={2}>
-                {drop.name}
-              </Text>
-              <Text style={styles.dropDescription} numberOfLines={2}>
-                {drop.description}
-              </Text>
-              
-              <View style={styles.priceContainer}>
-                <Ionicons name="diamond" size={16} color="#40ffdc" />
-                <Text style={styles.priceText}>
-                  {drop.price.toLocaleString()} tokens
-                </Text>
+        {displayDrops.map((drop, index) => {
+          const rarityColor = getRarityColor(drop.rarity);
+          return (
+            <TouchableOpacity
+              key={drop.id}
+              style={[
+                styles.dropCard,
+                index === displayDrops.length - 1 && styles.lastCard
+              ]}
+              onPress={() => router.push(`/pack-info?id=${drop.id}` as any)}
+              activeOpacity={0.8}
+            >
+              {/* Gem Icon Header */}
+              <View style={[styles.dropImageContainer, { backgroundColor: `${drop.color}20` }]}>
+                <View style={[styles.gemIconContainer, { backgroundColor: drop.color }]}>
+                  <Ionicons name={drop.icon as any} size={48} color="#ffffff" />
+                </View>
+                <View style={styles.rarityBadgeContainer}>
+                  <View style={[styles.rarityDot, { backgroundColor: rarityColor }]} />
+                  <Text style={[styles.rarityText, { color: rarityColor }]}>
+                    {drop.rarity.toUpperCase()}
+                  </Text>
+                </View>
               </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+
+              {/* Drop Info */}
+              <View style={styles.dropInfo}>
+                <Text style={styles.dropName} numberOfLines={1}>
+                  {drop.name}
+                </Text>
+                <Text style={styles.dropDescription} numberOfLines={2}>
+                  {drop.description}
+                </Text>
+                
+                <View style={styles.priceContainer}>
+                  <Ionicons name="diamond" size={16} color="#40ffdc" />
+                  <Text style={styles.priceText}>
+                    {drop.price.toLocaleString()} tokens
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -100,13 +179,13 @@ const GemDropsSection: React.FC<GemDropsSectionProps> = ({ drops }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingTop: 32,
+    paddingBottom: 32,
     position: 'relative',
   },
   header: {
     paddingHorizontal: HORIZONTAL_PADDING,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -150,17 +229,36 @@ const styles = StyleSheet.create({
   dropImageContainer: {
     width: '100%',
     height: 180,
-    backgroundColor: '#1a0a3a',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 20,
   },
-  dropPlaceholderText: {
-    color: '#40ffdc',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 8,
-    textAlign: 'center',
-    paddingHorizontal: 16,
+  gemIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  rarityBadgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  rarityDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  rarityText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   dropInfo: {
     padding: 16,
@@ -175,13 +273,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ffffff',
     opacity: 0.7,
-    marginBottom: 12,
+    marginBottom: 8,
     minHeight: 32,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 4,
   },
   priceText: {
     fontSize: 16,
