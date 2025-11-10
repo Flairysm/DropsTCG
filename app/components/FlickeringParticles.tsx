@@ -52,7 +52,7 @@ const FlickeringParticles: React.FC<FlickeringParticlesProps> = ({
       return {
         x: new Animated.Value(Math.max(0, Math.min(width, baseX + randomOffsetX))),
         y: new Animated.Value(Math.max(0, Math.min(height, baseY + randomOffsetY))),
-        opacity: new Animated.Value(0.7 + Math.random() * 0.3),
+        opacity: new Animated.Value(0.2 + Math.random() * 0.2), // More transparent: 0.2-0.4
         size: 1 + Math.random() * 6, // Varying sizes: 1-7px
       };
     });
@@ -83,16 +83,16 @@ const FlickeringParticles: React.FC<FlickeringParticlesProps> = ({
         ]).start(() => animateMovement());
       };
 
-      // Flicker animation
+      // Flicker animation - more subtle
       const animateFlicker = () => {
         Animated.sequence([
           Animated.timing(particle.opacity, {
-            toValue: 0.5,
+            toValue: 0.15,
             duration: flickerDuration * 0.5,
             useNativeDriver: true,
           }),
           Animated.timing(particle.opacity, {
-            toValue: 1,
+            toValue: 0.35,
             duration: flickerDuration * 0.5,
             useNativeDriver: true,
           }),
@@ -133,10 +133,10 @@ const FlickeringParticles: React.FC<FlickeringParticlesProps> = ({
             }
             @keyframes flicker {
               0%, 100% {
-                opacity: 0.3;
+                opacity: 0.15;
               }
               50% {
-                opacity: 1;
+                opacity: 0.4;
               }
             }
           `;
@@ -179,7 +179,8 @@ const FlickeringParticles: React.FC<FlickeringParticlesProps> = ({
                 height: `${size}px`,
                 borderRadius: '50%',
                 background: color,
-                boxShadow: `0 0 ${size * 2}px ${color}`,
+                opacity: 0.25,
+                boxShadow: `0 0 ${size * 1.5}px ${color}`,
                 animation: `slowMove ${moveDuration}s ease-in-out infinite, flicker ${flickerDuration}s ease-in-out ${delay}s infinite`,
               }}
             />
@@ -232,9 +233,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     shadowColor: '#87CEEB',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 6, // Android shadow
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3, // Android shadow - reduced
   },
 });
 

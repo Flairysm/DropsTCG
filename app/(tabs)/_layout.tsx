@@ -1,8 +1,10 @@
 import React, { useMemo, useRef, useEffect } from 'react';
+import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Animated, Easing } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import TopNavbar from '../components/TopNavbar';
 
 const COLORS = {
     active: '#40ffdc',
@@ -91,8 +93,10 @@ export default function TabsLayout() {
             tabBarActiveTintColor: COLORS.active,
             tabBarInactiveTintColor: COLORS.inactive,
             contentStyle: {
-                backgroundColor: '#150133',
+                backgroundColor: '#0a0019',
                 flex: 1,
+                zIndex: 10,
+                elevation: 10,
             },
             tabBarStyle: {
                 backgroundColor: COLORS.barBg,
@@ -107,7 +111,9 @@ export default function TabsLayout() {
     const tabsRef = useRef(null);
 
     return (
-        <Tabs screenOptions={screenOptions} ref={tabsRef}>
+        <View style={{ flex: 1, zIndex: 10, elevation: 10 }}>
+            <TopNavbar />
+            <Tabs screenOptions={screenOptions} ref={tabsRef}>
             {/* HOME */}
             <Tabs.Screen
                 name="index"
@@ -207,5 +213,6 @@ export default function TabsLayout() {
                 }}
             />
         </Tabs>
+        </View>
     );
 }
