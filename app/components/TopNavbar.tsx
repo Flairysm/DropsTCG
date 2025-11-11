@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import NotificationsPanel from './NotificationsPanel';
+import { useAuth } from '../contexts/AuthContext';
 
 const menuItems = [
   { name: 'Home', route: '/(tabs)/index', icon: 'home' },
@@ -17,6 +18,7 @@ const menuItems = [
 const TopNavbar: React.FC = () => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
@@ -24,6 +26,8 @@ const TopNavbar: React.FC = () => {
   
   // Sample unread count - replace with real state/API
   const unreadCount = 2;
+  
+  const isAuthenticated = !!user;
 
   const toggleMenu = () => {
     if (isMenuOpen) {
@@ -80,27 +84,46 @@ const TopNavbar: React.FC = () => {
         resizeMode="contain"
       />
       <View style={styles.rightButtons}>
-        <TouchableOpacity 
-          onPress={() => setIsNotificationsOpen(true)} 
-          style={styles.notificationButton}
-        >
-          <Ionicons name="notifications-outline" size={24} color="#ffffff" />
-          {unreadCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity onPress={toggleMenu} style={styles.menuButton}>
-          <Ionicons 
-            name={isMenuOpen ? 'close' : 'menu'} 
-            size={28} 
-            color="#ffffff" 
-          />
-        </TouchableOpacity>
+        {isAuthenticated ? (
+          <>
+            <TouchableOpacity 
+              onPress={() => setIsNotificationsOpen(true)} 
+              style={styles.notificationButton}
+            >
+              <Ionicons name="notifications-outline" size={24} color="#ffffff" />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleMenu} style={styles.menuButton}>
+              <Ionicons 
+                name={isMenuOpen ? 'close' : 'menu'} 
+                size={28} 
+                color="#ffffff" 
+              />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <View style={styles.authButtons}>
+            <TouchableOpacity 
+              onPress={() => router.push('/auth')} 
+              style={styles.loginButton}
+            >
+              <Text style={styles.loginButtonText}>Login</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => router.push('/auth?mode=signup')} 
+              style={styles.registerButton}
+            >
+              <Text style={styles.registerButtonText}>Register</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
-      {isMenuOpen && (
+      {isMenuOpen && isAuthenticated && (
         <Animated.View
           style={[
             styles.dropdown,
@@ -214,6 +237,34 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '500',
+  },
+  authButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loginButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#40ffdc',
+    marginRight: 12,
+  },
+  loginButtonText: {
+    color: '#40ffdc',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  registerButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#40ffdc',
+  },
+  registerButtonText: {
+    color: '#0a0019',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
 

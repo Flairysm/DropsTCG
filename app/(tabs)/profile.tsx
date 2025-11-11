@@ -1,20 +1,87 @@
-import React from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
+
+interface UserProfile {
+  username: string;
+  email: string;
+  phone_number?: string;
+  avatar?: string;
+  tokenBalance: number;
+  totalCards: number;
+  rareCards: number;
+  rafflesJoined: number;
+  packsOpened: number;
+}
 
 export default function Profile() {
   const router = useRouter();
-  // Sample user data - replace with actual user data from your API/state
-  const userData = {
-    username: 'Player123',
-    email: 'player@example.com',
-    avatar: null, // Can be an image URL
-    tokenBalance: 1250,
-    totalCards: 45,
-    rareCards: 12,
-    rafflesJoined: 8,
-    packsOpened: 23,
+  const { user } = useAuth();
+  const [userData, setUserData] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Refresh profile when screen comes into focus (e.g., returning from profile settings)
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchUserProfile();
+      }
+    }, [user])
+  );
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch user profile from user_profiles table
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('username, phone_number')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching profile:', profileError);
+      }
+
+      // Set user data with defaults
+      setUserData({
+        username: profile?.username || user.email?.split('@')[0] || 'User',
+        email: user.email || '',
+        phone_number: profile?.phone_number || undefined,
+        avatar: undefined,
+        tokenBalance: 0, // TODO: Fetch from tokens table when available
+        totalCards: 0, // TODO: Fetch from cards table when available
+        rareCards: 0, // TODO: Fetch from cards table when available
+        rafflesJoined: 0, // TODO: Fetch from raffles table when available
+        packsOpened: 0, // TODO: Fetch from packs table when available
+      });
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Set fallback data
+      setUserData({
+        username: user.email?.split('@')[0] || 'User',
+        email: user.email || '',
+        tokenBalance: 0,
+        totalCards: 0,
+        rareCards: 0,
+        rafflesJoined: 0,
+        packsOpened: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const menuItems = [
@@ -82,13 +149,25 @@ export default function Profile() {
   ];
 
   const handleMenuPress = (item: typeof menuItems[0]) => {
-    if (item.id === 'logout') {
-      // Handle logout - show confirmation modal or directly logout
-      // TODO: Implement logout logic
-      return;
-    }
+    // Navigate to the route - logout page will handle the confirmation modal
     router.push(item.route as any);
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#40ffdc" />
+      </View>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>No user data available</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -296,5 +375,14 @@ const styles = StyleSheet.create({
   },
   menuItemTextDestructive: {
     color: '#ff4444',
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: '#ffffff',
+    fontSize: 16,
+    opacity: 0.7,
   },
 });

@@ -1,20 +1,32 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Modal } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Logout() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { signOut } = useAuth();
   const [showConfirmModal, setShowConfirmModal] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogout = () => {
-    // TODO: Implement logout logic
-    // Clear user session, tokens, etc.
-    setShowConfirmModal(false);
-    // Navigate to login or home
-    router.replace('/(tabs)/index');
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      await signOut();
+      setShowConfirmModal(false);
+      // Navigate to auth page after logout
+      router.replace('/auth' as any);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if there's an error, close modal and navigate
+      setShowConfirmModal(false);
+      router.replace('/auth' as any);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -41,16 +53,22 @@ export default function Logout() {
             </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.modalCancelButton]}
+                style={[styles.modalButton, styles.modalCancelButton, loading && styles.modalButtonDisabled]}
                 onPress={handleCancel}
+                disabled={loading}
               >
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.modalLogoutButton]}
+                style={[styles.modalButton, styles.modalLogoutButton, loading && styles.modalButtonDisabled]}
                 onPress={handleLogout}
+                disabled={loading}
               >
-                <Text style={styles.modalLogoutButtonText}>Log Out</Text>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.modalLogoutButtonText}>Log Out</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -125,6 +143,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  modalButtonDisabled: {
+    opacity: 0.6,
   },
 });
 
