@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   ScrollView as RNScrollView,
   StatusBar as RNStatusBar,
@@ -542,22 +542,27 @@ export default function VaultScreen() {
     },
   ]);
 
-  const toggleCardSelection = (cardId) => {
-    const newSelection = new Set(selectedCards);
-    if (newSelection.has(cardId)) {
-      newSelection.delete(cardId);
-    } else {
-      newSelection.add(cardId);
-    }
-    setSelectedCards(newSelection);
-  };
+  const toggleCardSelection = useCallback(
+    (cardId) => {
+      setSelectedCards((prev) => {
+        const newSelection = new Set(prev);
+        if (newSelection.has(cardId)) {
+          newSelection.delete(cardId);
+        } else {
+          newSelection.add(cardId);
+        }
+        return newSelection;
+      });
+    },
+    []
+  );
 
-  const handleAction = (type) => {
+  const handleAction = useCallback((type) => {
     setActionType(type);
     setShowActionModal(true);
-  };
+  }, []);
 
-  const confirmAction = () => {
+  const confirmAction = useCallback(() => {
     if (selectedCards.size > 0 && actionType) {
       if (actionType === 'refund') {
         // Remove refunded cards from the vault
@@ -571,11 +576,14 @@ export default function VaultScreen() {
       setSelectedCards(new Set());
       setActionType(null);
     }
-  };
+  }, [selectedCards, actionType]);
 
-  const getTierColor = (tier) => {
-    return theme.colors.tier[tier] || theme.colors.accent;
-  };
+  const getTierColor = useCallback(
+    (tier) => {
+      return theme.colors.tier?.[tier] || theme.colors.accent;
+    },
+    [theme.colors]
+  );
 
   // Filter and sort cards
   const filteredCards = useMemo(() => {
@@ -618,21 +626,34 @@ export default function VaultScreen() {
     return sorted;
   }, [userCards, selectedTier, selectedCategory, searchQuery, sortBy]);
 
-  const selectedCardsArray = filteredCards.filter((card) => selectedCards.has(card.id));
-  const canRefundSelected =
-    selectedCardsArray.length > 0 && selectedCardsArray.every((card) => card.canRefund);
-  const canShipSelected =
-    selectedCardsArray.length > 0 && selectedCardsArray.every((card) => card.canShip);
-  const hasSelection = selectedCards.size > 0;
-  const allSelected = filteredCards.length > 0 && selectedCards.size === filteredCards.length;
+  const selectedCardsArray = useMemo(
+    () => filteredCards.filter((card) => selectedCards.has(card.id)),
+    [filteredCards, selectedCards]
+  );
 
-  const handleSelectAll = () => {
+  const canRefundSelected = useMemo(
+    () => selectedCardsArray.length > 0 && selectedCardsArray.every((card) => card.canRefund),
+    [selectedCardsArray]
+  );
+
+  const canShipSelected = useMemo(
+    () => selectedCardsArray.length > 0 && selectedCardsArray.every((card) => card.canShip),
+    [selectedCardsArray]
+  );
+
+  const hasSelection = selectedCards.size > 0;
+  const allSelected = useMemo(
+    () => filteredCards.length > 0 && selectedCards.size === filteredCards.length,
+    [filteredCards.length, selectedCards.size]
+  );
+
+  const handleSelectAll = useCallback(() => {
     if (allSelected) {
       setSelectedCards(new Set());
     } else {
       setSelectedCards(new Set(filteredCards.map((card) => card.id)));
     }
-  };
+  }, [allSelected, filteredCards]);
 
   return (
     <Container edges={['left', 'right']}>

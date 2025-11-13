@@ -244,18 +244,7 @@ export default function ProfileScreen({ navigation }) {
   // TODO: Replace with actual auth context
   // const { user } = useAuth();
 
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  // Refresh profile when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      fetchUserProfile();
-    }, [])
-  );
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       // TODO: Replace with actual Supabase/API call
       // const { data: profile, error: profileError } = await supabase
@@ -291,9 +280,20 @@ export default function ProfileScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleMenuPress = (item) => {
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
+
+  // Refresh profile when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserProfile();
+    }, [fetchUserProfile])
+  );
+
+  const handleMenuPress = useCallback((item) => {
     // TODO: Implement navigation to routes
     // For now, just log the action
     console.log('Navigate to:', item.route);
@@ -304,7 +304,7 @@ export default function ProfileScreen({ navigation }) {
     // } else {
     //   navigation.navigate(item.route);
     // }
-  };
+  }, [navigation]);
 
   if (loading) {
     return (

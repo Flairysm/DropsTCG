@@ -127,7 +127,7 @@ const menuItems = [
   { name: 'Play', route: 'Play', icon: 'game-controller' },
   { name: 'Vault', route: 'Vault', icon: 'cube' },
   { name: 'Profile', route: 'Profile', icon: 'person' },
-  // { name: 'Admin', route: 'Admin', icon: 'shield' }, // Uncomment when Admin screen is added
+  { name: 'Admin', route: 'Admin', icon: 'shield' },
 ];
 
 const TopNavbar = React.memo(() => {
@@ -211,6 +211,9 @@ const TopNavbar = React.memo(() => {
     [fadeAnim, translateY, insets.top]
   );
 
+  const handleNotificationOpen = useCallback(() => setIsNotificationsOpen(true), []);
+  const handleNotificationClose = useCallback(() => setIsNotificationsOpen(false), []);
+
   return (
     <Container style={containerStyle}>
       <Logo
@@ -221,7 +224,7 @@ const TopNavbar = React.memo(() => {
       <RightButtons>
         {isAuthenticated ? (
           <>
-            <NotificationButton onPress={() => setIsNotificationsOpen(true)}>
+            <NotificationButton onPress={handleNotificationOpen}>
               <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
               {unreadCount > 0 && (
                 <Badge>
@@ -267,10 +270,7 @@ const TopNavbar = React.memo(() => {
         </Dropdown>
       )}
 
-      <NotificationsPanel
-        visible={isNotificationsOpen}
-        onClose={() => setIsNotificationsOpen(false)}
-      />
+      <NotificationsPanel visible={isNotificationsOpen} onClose={handleNotificationClose} />
     </Container>
   );
 });

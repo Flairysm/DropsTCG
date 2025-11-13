@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   ScrollView as RNScrollView,
   StatusBar as RNStatusBar,
@@ -274,12 +274,12 @@ export default function ReloadScreen() {
   const [customAmount, setCustomAmount] = useState('');
   const [currentTokens, setCurrentTokens] = useState(0); // TODO: Replace with actual user token balance
 
-  const handleQuickSelect = (rm) => {
+  const handleQuickSelect = useCallback((rm) => {
     setSelectedAmount(rm);
     setCustomAmount('');
-  };
+  }, []);
 
-  const handleCustomAmountChange = (text) => {
+  const handleCustomAmountChange = useCallback((text) => {
     // Only allow numbers and one decimal point
     const cleaned = text.replace(/[^0-9.]/g, '');
     const parts = cleaned.split('.');
@@ -287,9 +287,9 @@ export default function ReloadScreen() {
 
     setCustomAmount(cleaned);
     setSelectedAmount(null);
-  };
+  }, []);
 
-  const getSelectedRM = () => {
+  const selectedRM = useMemo(() => {
     if (selectedAmount !== null) {
       return selectedAmount;
     }
@@ -297,27 +297,20 @@ export default function ReloadScreen() {
       return parseFloat(customAmount);
     }
     return 0;
-  };
+  }, [selectedAmount, customAmount]);
 
-  const getTotalTokens = () => {
-    const rm = getSelectedRM();
-    return Math.floor(rm * TOKENS_PER_RM);
-  };
+  const totalTokens = useMemo(() => {
+    return Math.floor(selectedRM * TOKENS_PER_RM);
+  }, [selectedRM]);
 
-  const handleReload = () => {
-    const rm = getSelectedRM();
-    const tokens = getTotalTokens();
-
-    if (rm <= 0) {
+  const handleReload = useCallback(() => {
+    if (selectedRM <= 0) {
       // Show error - no amount selected
       return;
     }
     // TODO: Implement payment processing
     // After successful payment, update token balance
-  };
-
-  const selectedRM = getSelectedRM();
-  const totalTokens = getTotalTokens();
+  }, [selectedRM]);
 
   return (
     <Container edges={['left', 'right']}>

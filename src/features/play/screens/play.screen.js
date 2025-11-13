@@ -1,14 +1,19 @@
+import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
+  Platform,
   ScrollView as RNScrollView,
   StatusBar as RNStatusBar,
-  Platform,
   TouchableOpacity,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
-import { Ionicons } from '@expo/vector-icons';
+import RafflesSection from '../../home/components/RafflesSection';
+import GemDropsSection from '../components/GemDropsSection';
+import MinigamesSection from '../components/MinigamesSection';
+import MysteryBoxesSection from '../components/MysteryBoxesSection';
+import VirtualBoosterPacksSection from '../components/VirtualBoosterPacksSection';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -137,13 +142,13 @@ export default function PlayScreen() {
             </PlaceholderText>
           </PlaceholderContainer>
         ) : (
-          <PlaceholderContainer>
-            <Ionicons name="game-controller-outline" size={64} color={theme.colors.accent} />
-            <PlaceholderTitle>{selectedCategory} Games</PlaceholderTitle>
-            <PlaceholderText>
-              {selectedCategory} game content will be available soon
-            </PlaceholderText>
-          </PlaceholderContainer>
+          <>
+            <RafflesSection />
+            <GemDropsSection category={selectedCategory} />
+            <MysteryBoxesSection category={selectedCategory} />
+            <MinigamesSection category={selectedCategory} />
+            <VirtualBoosterPacksSection category={selectedCategory} />
+          </>
         )}
       </ContentScrollView>
     </Container>

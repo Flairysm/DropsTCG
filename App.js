@@ -1,18 +1,24 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import TopNavbar from './src/components/TopNavbar';
+import AdminScreen from './src/features/admin/screens/admin.screen';
 import HomeScreen from './src/features/home/screens/home.screen';
+import GemDropsScreen from './src/features/play/screens/gem-drops.screen';
+import MysteryBoxDetailScreen from './src/features/play/screens/mystery-box-detail.screen';
 import PlayScreen from './src/features/play/screens/play.screen';
+import VirtualBoosterPackDetailScreen from './src/features/play/screens/virtual-booster-pack-detail.screen';
 import ProfileScreen from './src/features/profile/screens/profile.screen';
 import ReloadScreen from './src/features/reload/screens/reload.screen';
 import VaultScreen from './src/features/vault/screens/vault.screen';
 import { ThemeProvider } from './src/infrastructure/theme';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 const TAB_COLORS = {
   active: '#40ffdc',
@@ -20,7 +26,7 @@ const TAB_COLORS = {
   barBg: '#12042b',
 };
 
-function BottomTabNavigator() {
+const BottomTabNavigator = React.memo(() => {
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom || 0;
 
@@ -124,7 +130,9 @@ function BottomTabNavigator() {
       </Tab.Navigator>
     </View>
   );
-}
+});
+
+BottomTabNavigator.displayName = 'BottomTabNavigator';
 
 export default function App() {
   return (
@@ -136,7 +144,13 @@ export default function App() {
             // Navigation is ready
           }}
         >
-          <BottomTabNavigator />
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+            <Stack.Screen name="Admin" component={AdminScreen} />
+            <Stack.Screen name="GemDrops" component={GemDropsScreen} />
+            <Stack.Screen name="MysteryBox" component={MysteryBoxDetailScreen} />
+            <Stack.Screen name="VirtualBoosterPack" component={VirtualBoosterPackDetailScreen} />
+          </Stack.Navigator>
         </NavigationContainer>
       </ThemeProvider>
     </SafeAreaProvider>
