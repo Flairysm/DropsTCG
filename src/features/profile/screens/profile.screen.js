@@ -343,7 +343,7 @@ export default function ProfileScreen({ navigation }) {
   }
 
   return (
-    <Container edges={['top', 'left', 'right']}>
+    <Container edges={['left', 'right']}>
       {/* Expo StatusBar for iOS */}
       <StatusBar style="light" />
       {/* React Native StatusBar for Android */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
@@ -55,9 +55,14 @@ const EmptyText = styled.Text`
   margin-top: 12px;
 `;
 
-export default function NotificationsPanel({ visible, onClose }) {
+const NotificationsPanel = React.memo(({ visible, onClose }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+
+  const panelStyle = useMemo(
+    () => ({ paddingBottom: Math.max(insets.bottom, 20) }),
+    [insets.bottom]
+  );
 
   return (
     <Modal
@@ -67,10 +72,7 @@ export default function NotificationsPanel({ visible, onClose }) {
       onRequestClose={onClose}
     >
       <ModalOverlay activeOpacity={1} onPress={onClose}>
-        <PanelContainer
-          style={{ paddingBottom: Math.max(insets.bottom, 20) }}
-          onStartShouldSetResponder={() => true}
-        >
+        <PanelContainer style={panelStyle} onStartShouldSetResponder={() => true}>
           <PanelHeader>
             <PanelTitle>Notifications</PanelTitle>
             <CloseButton onPress={onClose}>
@@ -87,5 +89,9 @@ export default function NotificationsPanel({ visible, onClose }) {
       </ModalOverlay>
     </Modal>
   );
-}
+});
+
+NotificationsPanel.displayName = 'NotificationsPanel';
+
+export default NotificationsPanel;
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Image, TouchableOpacity, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -130,7 +130,7 @@ const menuItems = [
   // { name: 'Admin', route: 'Admin', icon: 'shield' }, // Uncomment when Admin screen is added
 ];
 
-export default function TopNavbar() {
+const TopNavbar = React.memo(() => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -143,7 +143,7 @@ export default function TopNavbar() {
   const unreadCount = 2;
   const isAuthenticated = true; // TODO: Replace with actual auth check
 
-  const toggleMenu = () => {
+  const toggleMenu = useCallback(() => {
     if (isMenuOpen) {
       // Close menu
       Animated.parallel([
@@ -174,26 +174,45 @@ export default function TopNavbar() {
       ]).start();
     }
     setIsMenuOpen(!isMenuOpen);
-  };
+  }, [isMenuOpen, slideAnim, fadeAnim]);
 
-  const handleNavigate = (route) => {
-    navigation.navigate(route);
-    toggleMenu();
-  };
+  const handleNavigate = useCallback(
+    (route) => {
+      navigation.navigate(route);
+      toggleMenu();
+    },
+    [navigation, toggleMenu]
+  );
 
-  const translateY = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-200, 0],
-  });
+  const translateY = useMemo(
+    () =>
+      slideAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-200, 0],
+      }),
+    [slideAnim]
+  );
+
+  const containerStyle = useMemo(
+    () => ({
+      paddingTop: insets.top + 8,
+      paddingLeft: Math.max(insets.left, 16),
+      paddingRight: Math.max(insets.right, 16),
+    }),
+    [insets.top, insets.left, insets.right]
+  );
+
+  const dropdownStyle = useMemo(
+    () => ({
+      opacity: fadeAnim,
+      transform: [{ translateY }],
+      top: insets.top + 48,
+    }),
+    [fadeAnim, translateY, insets.top]
+  );
 
   return (
-    <Container
-      style={{
-        paddingTop: insets.top + 8,
-        paddingLeft: Math.max(insets.left, 16),
-        paddingRight: Math.max(insets.right, 16),
-      }}
-    >
+    <Container style={containerStyle}>
       <Logo
         source={require('../../assets/drops-logo.png')}
         resizeMode="contain"
@@ -231,13 +250,7 @@ export default function TopNavbar() {
       </RightButtons>
 
       {isMenuOpen && isAuthenticated && (
-        <Dropdown
-          style={{
-            opacity: fadeAnim,
-            transform: [{ translateY }],
-            top: insets.top + 48,
-          }}
-        >
+        <Dropdown style={dropdownStyle}>
           {menuItems.map((item, index) => (
             <MenuItem
               key={item.name}
@@ -260,5 +273,9 @@ export default function TopNavbar() {
       />
     </Container>
   );
-}
+});
+
+TopNavbar.displayName = 'TopNavbar';
+
+export default TopNavbar;
 

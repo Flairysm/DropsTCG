@@ -1,16 +1,16 @@
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import {
+  Platform,
   ScrollView as RNScrollView,
   StatusBar as RNStatusBar,
-  Platform,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
-import WelcomeSection from '../components/WelcomeSection';
 import FeaturedSection from '../components/FeaturedSection';
 import RafflesSection from '../components/RafflesSection';
 import RecentPulls from '../components/RecentPulls';
+import WelcomeSection from '../components/WelcomeSection';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
