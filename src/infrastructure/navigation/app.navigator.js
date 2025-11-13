@@ -1,6 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { View } from 'react-native';
@@ -132,17 +131,10 @@ BottomTabNavigator.displayName = 'BottomTabNavigator';
 
 export const AppNavigator = () => {
   return (
-    <NavigationContainer
-      independent={false}
-      onReady={() => {
-        // Navigation is ready
-      }}
-    >
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
-        <Stack.Screen name="Admin" component={AdminNavigator} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+      <Stack.Screen name="Admin" component={AdminNavigator} />
+    </Stack.Navigator>
   );
 };
 

@@ -1,12 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import {
-  Platform,
-  ScrollView as RNScrollView,
-  StatusBar as RNStatusBar,
+    Platform,
+    ScrollView as RNScrollView,
+    StatusBar as RNStatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
+import { useAuth } from '../../../services/authentication/authentication.context';
 import FeaturedSection from '../components/FeaturedSection';
 import RafflesSection from '../components/RafflesSection';
 import RecentPulls from '../components/RecentPulls';
@@ -27,6 +28,10 @@ const StyledScrollView = styled(RNScrollView)`
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const { user } = useAuth();
+  
+  // Get username from user object
+  const username = user?.username || user?.email?.split('@')[0] || 'Player';
 
   return (
     <Container edges={['left', 'right']}>
@@ -45,7 +50,7 @@ export default function HomeScreen() {
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={{ paddingBottom: 20 }}
       >
-        <WelcomeSection userName={undefined} />
+        <WelcomeSection userName={username} />
         <FeaturedSection />
         <RafflesSection />
         <RecentPulls />

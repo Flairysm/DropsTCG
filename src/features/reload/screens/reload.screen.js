@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   ScrollView as RNScrollView,
   StatusBar as RNStatusBar,
@@ -11,6 +11,9 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../../services/authentication/authentication.context';
+import { useFocusEffect } from '@react-navigation/native';
+import { supabase } from '../../../infrastructure/supabase';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -270,9 +273,46 @@ const QUICK_AMOUNTS = [
 
 export default function ReloadScreen() {
   const theme = useTheme();
+  const { user } = useAuth();
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
-  const [currentTokens, setCurrentTokens] = useState(0); // TODO: Replace with actual user token balance
+  const [currentTokens, setCurrentTokens] = useState(0);
+
+  // Fetch current token balance from Supabase
+  const fetchTokenBalance = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('user_profiles')
+        .select('token_balance')
+        .eq('id', user.id)
+        .single();
+
+      if (!error && profile) {
+        setCurrentTokens(profile.token_balance || 0);
+      } else {
+        setCurrentTokens(user.tokenBalance || 0);
+      }
+    } catch (err) {
+      console.log('Could not fetch token balance:', err);
+      setCurrentTokens(user.tokenBalance || 0);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      setCurrentTokens(user.tokenBalance || 0);
+      fetchTokenBalance();
+    }
+  }, [user, fetchTokenBalance]);
+
+  // Refresh token balance when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchTokenBalance();
+    }, [fetchTokenBalance])
+  );
 
   const handleQuickSelect = useCallback((rm) => {
     setSelectedAmount(rm);
@@ -303,14 +343,52 @@ export default function ReloadScreen() {
     return Math.floor(selectedRM * TOKENS_PER_RM);
   }, [selectedRM]);
 
-  const handleReload = useCallback(() => {
+  const handleReload = useCallback(async () => {
     if (selectedRM <= 0) {
       // Show error - no amount selected
       return;
     }
-    // TODO: Implement payment processing
-    // After successful payment, update token balance
-  }, [selectedRM]);
+
+    if (!user?.id) {
+      console.error('User not authenticated');
+      return;
+    }
+
+    try {
+      // TODO: Implement payment processing
+      // For now, simulate adding tokens to balance
+      const tokensToAdd = totalTokens;
+      
+      // Update token balance in user_profiles table
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('token_balance')
+        .eq('id', user.id)
+        .single();
+
+      const newBalance = (profile?.token_balance || 0) + tokensToAdd;
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ 
+          token_balance: newBalance,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating token balance:', error);
+      } else {
+        // Refresh token balance
+        await fetchTokenBalance();
+        // Reset form
+        setSelectedAmount(null);
+        setCustomAmount('');
+      }
+    } catch (error) {
+      console.error('Error processing reload:', error);
+    }
+  }, [selectedRM, totalTokens, user, fetchTokenBalance]);
 
   return (
     <Container edges={['left', 'right']}>

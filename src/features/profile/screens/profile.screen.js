@@ -9,9 +9,11 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import styled, { useTheme } from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../../services/authentication/authentication.context';
+import { supabase } from '../../../infrastructure/supabase';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -236,42 +238,104 @@ const menuItems = [
   },
 ];
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen() {
   const theme = useTheme();
+  const navigation = useNavigation();
+  const { user, logout } = useAuth();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // TODO: Replace with actual auth context
-  // const { user } = useAuth();
-
   const fetchUserProfile = useCallback(async () => {
-    try {
-      // TODO: Replace with actual Supabase/API call
-      // const { data: profile, error: profileError } = await supabase
-      //   .from('user_profiles')
-      //   .select('username, phone_number')
-      //   .eq('id', user.id)
-      //   .single();
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-      // Mock data for now
+    try {
+      // Fetch user profile from Supabase
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        // PGRST116 means no rows returned, which is okay for new users
+        console.error('Error fetching user profile:', profileError);
+      }
+
+      // Fetch additional stats if tables exist
+      let totalCards = 0;
+      let rareCards = 0;
+      let rafflesJoined = 0;
+      let packsOpened = 0;
+
+      try {
+        // Try to fetch card count
+        const { count: cardCount } = await supabase
+          .from('user_cards')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        totalCards = cardCount || 0;
+
+        // Try to fetch rare cards count (SSS, SS, S tiers)
+        const { count: rareCount } = await supabase
+          .from('user_cards')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .in('tier', ['SSS', 'SS', 'S']);
+
+        rareCards = rareCount || 0;
+      } catch (err) {
+        // Tables might not exist yet
+        console.log('Could not fetch card stats:', err);
+      }
+
+      try {
+        // Try to fetch raffle participation count
+        const { count: raffleCount } = await supabase
+          .from('raffle_participants')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        rafflesJoined = raffleCount || 0;
+      } catch (err) {
+        console.log('Could not fetch raffle stats:', err);
+      }
+
+      try {
+        // Try to fetch pack opening count
+        const { count: packCount } = await supabase
+          .from('pack_openings')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        packsOpened = packCount || 0;
+      } catch (err) {
+        console.log('Could not fetch pack stats:', err);
+      }
+
       setUserData({
-        username: 'Player',
-        email: 'player@example.com',
-        phone_number: undefined,
-        avatar: undefined,
-        tokenBalance: 0, // TODO: Fetch from tokens table when available
-        totalCards: 0, // TODO: Fetch from cards table when available
-        rareCards: 0, // TODO: Fetch from cards table when available
-        rafflesJoined: 0, // TODO: Fetch from raffles table when available
-        packsOpened: 0, // TODO: Fetch from packs table when available
+        username: profile?.username || user.username || user.email?.split('@')[0] || 'User',
+        email: user.email || '',
+        phone_number: profile?.phone_number || null,
+        avatar: profile?.avatar || null,
+        tokenBalance: profile?.token_balance || user.tokenBalance || 0,
+        totalCards,
+        rareCards,
+        rafflesJoined,
+        packsOpened,
       });
     } catch (error) {
       console.error('Error fetching user data:', error);
-      // Set fallback data
+      // Set fallback data from auth context
       setUserData({
-        username: 'User',
-        email: '',
-        tokenBalance: 0,
+        username: user.username || user.email?.split('@')[0] || 'User',
+        email: user.email || '',
+        phone_number: null,
+        avatar: null,
+        tokenBalance: user.tokenBalance || 0,
         totalCards: 0,
         rareCards: 0,
         rafflesJoined: 0,
@@ -280,7 +344,7 @@ export default function ProfileScreen({ navigation }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchUserProfile();
@@ -293,18 +357,27 @@ export default function ProfileScreen({ navigation }) {
     }, [fetchUserProfile])
   );
 
-  const handleMenuPress = useCallback((item) => {
-    // TODO: Implement navigation to routes
-    // For now, just log the action
-    console.log('Navigate to:', item.route);
-    
-    // Example navigation (uncomment when routes are set up):
-    // if (item.id === 'logout') {
-    //   // Handle logout
-    // } else {
-    //   navigation.navigate(item.route);
-    // }
-  }, [navigation]);
+  const handleMenuPress = useCallback(async (item) => {
+    if (item.id === 'logout') {
+      try {
+        const result = await logout();
+        if (result.success) {
+          // Navigation will automatically switch to login via RootNavigator
+          // when isAuthenticated becomes false
+          console.log('Logout successful');
+        } else {
+          console.error('Logout failed:', result.error);
+          // Still try to navigate - state should be cleared
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        // State should still be cleared, navigation should happen
+      }
+    } else {
+      // TODO: Implement navigation to other routes when screens are created
+      console.log('Navigate to:', item.route);
+    }
+  }, [logout]);
 
   if (loading) {
     return (
