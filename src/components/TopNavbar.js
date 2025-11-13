@@ -1,0 +1,264 @@
+import React, { useState } from 'react';
+import { Image, TouchableOpacity, Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import styled, { useTheme } from 'styled-components/native';
+import { Ionicons } from '@expo/vector-icons';
+import NotificationsPanel from './NotificationsPanel';
+
+const Container = styled.View`
+  background-color: ${(props) => props.theme.colors.secondary};
+  padding-bottom: 12px;
+  border-bottom-width: 1px;
+  border-bottom-color: ${(props) => props.theme.colors.borderLight};
+  z-index: 10;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+`;
+
+const Logo = styled.Image`
+  height: 28px;
+  width: 84px;
+`;
+
+const RightButtons = styled.View`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const NotificationButton = styled(TouchableOpacity)`
+  padding: 4px;
+  position: relative;
+  margin-right: 8px;
+`;
+
+const Badge = styled.View`
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: ${(props) => props.theme.colors.error};
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  justify-content: center;
+  align-items: center;
+  padding-horizontal: 4px;
+`;
+
+const BadgeText = styled.Text`
+  color: ${(props) => props.theme.colors.text};
+  font-size: 10px;
+  font-weight: 700;
+`;
+
+const MenuButton = styled(TouchableOpacity)`
+  padding: 4px;
+`;
+
+const Dropdown = styled(Animated.View)`
+  position: absolute;
+  right: 0;
+  background-color: ${(props) => props.theme.colors.secondary};
+  border-radius: 8px;
+  border-width: 1px;
+  border-color: ${(props) => props.theme.colors.border};
+  min-width: 180px;
+  overflow: hidden;
+  z-index: 1000;
+`;
+
+const MenuItem = styled(TouchableOpacity)`
+  flex-direction: row;
+  align-items: center;
+  padding-vertical: 14px;
+  padding-horizontal: 16px;
+  border-bottom-width: ${(props) => (props.isLast ? '0px' : '1px')};
+  border-bottom-color: ${(props) => props.theme.colors.borderLight};
+`;
+
+const MenuIcon = styled.View`
+  margin-right: 12px;
+`;
+
+const MenuText = styled.Text`
+  color: ${(props) => props.theme.colors.text};
+  font-size: 16px;
+  font-weight: 500;
+`;
+
+const AuthButtons = styled.View`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const LoginButton = styled(TouchableOpacity)`
+  padding-horizontal: 16px;
+  padding-vertical: 8px;
+  border-radius: 8px;
+  border-width: 1px;
+  border-color: ${(props) => props.theme.colors.accent};
+  margin-right: 12px;
+`;
+
+const LoginButtonText = styled.Text`
+  color: ${(props) => props.theme.colors.accent};
+  font-size: 14px;
+  font-weight: 600;
+`;
+
+const RegisterButton = styled(TouchableOpacity)`
+  padding-horizontal: 16px;
+  padding-vertical: 8px;
+  border-radius: 8px;
+  background-color: ${(props) => props.theme.colors.accent};
+`;
+
+const RegisterButtonText = styled.Text`
+  color: ${(props) => props.theme.colors.primary};
+  font-size: 14px;
+  font-weight: 700;
+`;
+
+const menuItems = [
+  { name: 'Home', route: 'Home', icon: 'home' },
+  { name: 'Reload', route: 'Reload', icon: 'refresh' },
+  { name: 'Play', route: 'Play', icon: 'game-controller' },
+  { name: 'Vault', route: 'Vault', icon: 'cube' },
+  { name: 'Profile', route: 'Profile', icon: 'person' },
+  // { name: 'Admin', route: 'Admin', icon: 'shield' }, // Uncomment when Admin screen is added
+];
+
+export default function TopNavbar() {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [slideAnim] = useState(new Animated.Value(0));
+  const [fadeAnim] = useState(new Animated.Value(0));
+
+  // TODO: Replace with real state/API
+  const unreadCount = 2;
+  const isAuthenticated = true; // TODO: Replace with actual auth check
+
+  const toggleMenu = () => {
+    if (isMenuOpen) {
+      // Close menu
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Open menu
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleNavigate = (route) => {
+    navigation.navigate(route);
+    toggleMenu();
+  };
+
+  const translateY = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-200, 0],
+  });
+
+  return (
+    <Container
+      style={{
+        paddingTop: insets.top + 8,
+        paddingLeft: Math.max(insets.left, 16),
+        paddingRight: Math.max(insets.right, 16),
+      }}
+    >
+      <Logo
+        source={require('../../assets/drops-logo.png')}
+        resizeMode="contain"
+      />
+
+      <RightButtons>
+        {isAuthenticated ? (
+          <>
+            <NotificationButton onPress={() => setIsNotificationsOpen(true)}>
+              <Ionicons name="notifications-outline" size={24} color={theme.colors.text} />
+              {unreadCount > 0 && (
+                <Badge>
+                  <BadgeText>{unreadCount > 9 ? '9+' : unreadCount}</BadgeText>
+                </Badge>
+              )}
+            </NotificationButton>
+            <MenuButton onPress={toggleMenu}>
+              <Ionicons
+                name={isMenuOpen ? 'close' : 'menu'}
+                size={28}
+                color={theme.colors.text}
+              />
+            </MenuButton>
+          </>
+        ) : (
+          <AuthButtons>
+            <LoginButton onPress={() => console.log('Navigate to login')}>
+              <LoginButtonText>Login</LoginButtonText>
+            </LoginButton>
+            <RegisterButton onPress={() => console.log('Navigate to register')}>
+              <RegisterButtonText>Register</RegisterButtonText>
+            </RegisterButton>
+          </AuthButtons>
+        )}
+      </RightButtons>
+
+      {isMenuOpen && isAuthenticated && (
+        <Dropdown
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY }],
+            top: insets.top + 48,
+          }}
+        >
+          {menuItems.map((item, index) => (
+            <MenuItem
+              key={item.name}
+              isLast={index === menuItems.length - 1}
+              onPress={() => handleNavigate(item.route)}
+              activeOpacity={0.7}
+            >
+              <MenuIcon>
+                <Ionicons name={item.icon} size={20} color={theme.colors.accent} />
+              </MenuIcon>
+              <MenuText>{item.name}</MenuText>
+            </MenuItem>
+          ))}
+        </Dropdown>
+      )}
+
+      <NotificationsPanel
+        visible={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+      />
+    </Container>
+  );
+}
+
