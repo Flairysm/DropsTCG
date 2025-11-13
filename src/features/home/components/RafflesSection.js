@@ -1,6 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import styled from 'styled-components/native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -214,6 +215,8 @@ const ViewDetailsText = styled.Text`
 `;
 
 const RafflesSection = ({ raffles }) => {
+  const navigation = useNavigation();
+
   // Sample raffle data - replace with real data from your API/state
   const defaultRaffles = [
     {
@@ -257,8 +260,7 @@ const RafflesSection = ({ raffles }) => {
   };
 
   const handleViewDetails = (raffleId) => {
-    // TODO: Navigate to raffle details page when routing is implemented
-    console.log('View details for raffle:', raffleId);
+    navigation.navigate('Raffle', { raffleId });
   };
 
   return (
@@ -291,6 +293,8 @@ const RafflesSection = ({ raffles }) => {
             <RaffleCard
               key={raffle.id}
               isLast={index === displayRaffles.length - 1}
+              onPress={() => handleViewDetails(raffle.id)}
+              activeOpacity={0.8}
             >
               {/* Prize Image Placeholder */}
               <PrizeImageContainer>

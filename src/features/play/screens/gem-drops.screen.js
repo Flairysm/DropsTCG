@@ -8,12 +8,12 @@ import {
     ScrollView as RNScrollView,
     StatusBar as RNStatusBar,
     TextInput,
-    TouchableOpacity
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
 
-const Container = styled(SafeAreaView)`
+const Container = styled(View)`
   flex: 1;
   background-color: ${(props) => props.theme.colors.primary};
 `;
@@ -23,7 +23,7 @@ const Header = styled.View`
   align-items: center;
   justify-content: space-between;
   padding-horizontal: 20px;
-  padding-vertical: 16px;
+  padding-vertical: 8px;
   background-color: ${(props) => props.theme.colors.secondary};
   border-bottom-width: 1px;
   border-bottom-color: ${(props) => props.theme.colors.borderLight};
@@ -259,7 +259,7 @@ const PurchaseBar = styled.View`
   border-top-width: 2px;
   border-top-color: ${(props) => props.theme.colors.borderLight};
   padding-horizontal: 20px;
-  padding-top: 20px;
+  padding-vertical: 8px;
   flex-direction: row;
   align-items: center;
 `;
@@ -310,7 +310,7 @@ const PurchaseButton = styled(TouchableOpacity)`
   background-color: ${(props) =>
     props.disabled ? 'rgba(64, 255, 220, 0.3)' : props.theme.colors.accent};
   border-radius: 12px;
-  padding-vertical: 16px;
+  padding-vertical: 10px;
   padding-horizontal: 8px;
   opacity: ${(props) => (props.disabled ? 0.5 : 1)};
   min-width: 0;
@@ -743,7 +743,6 @@ const getTierColor = (tier) => {
 export default function GemDropsScreen({ route }) {
   const theme = useTheme();
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const gemDropId = route?.params?.gemDropId || null;
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [quantity, setQuantity] = useState('1');
@@ -821,7 +820,7 @@ export default function GemDropsScreen({ route }) {
   }, [selectedGem, quantityNum]);
 
   return (
-    <Container edges={['top', 'left', 'right']}>
+    <Container>
       {/* Expo StatusBar for iOS */}
       <StatusBar style="light" />
       {/* React Native StatusBar for Android */}
@@ -953,7 +952,7 @@ export default function GemDropsScreen({ route }) {
 
       {/* Purchase Bar */}
       {selectedGem && (
-        <PurchaseBar style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+        <PurchaseBar>
           <QuantityContainer>
             <QuantityLabel>Quantity:</QuantityLabel>
             <QuantityControls>
