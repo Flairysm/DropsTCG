@@ -2,9 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
+import { toast } from '../../../components/Toast';
 import { useAuth } from '../../../services/authentication/authentication.context';
+import { validateEmail, validatePassword } from '../../../utils/validation';
 
 const Container = styled.View`
   flex: 1;
@@ -208,27 +210,20 @@ const LoginScreen = () => {
   const [passwordError, setPasswordError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const validateEmail = (emailValue) => {
-    if (!emailValue.trim()) {
-      setEmailError('Email is required');
-      return false;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailValue.trim())) {
-      setEmailError('Please enter a valid email address');
+  const validateEmailField = (emailValue) => {
+    const result = validateEmail(emailValue);
+    if (!result.isValid) {
+      setEmailError(result.error);
       return false;
     }
     setEmailError('');
     return true;
   };
 
-  const validatePassword = (passwordValue) => {
-    if (!passwordValue.trim()) {
-      setPasswordError('Password is required');
-      return false;
-    }
-    if (passwordValue.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+  const validatePasswordField = (passwordValue) => {
+    const result = validatePassword(passwordValue);
+    if (!result.isValid) {
+      setPasswordError(result.error);
       return false;
     }
     setPasswordError('');
@@ -239,7 +234,7 @@ const LoginScreen = () => {
     setEmail(text);
     setError('');
     if (text.trim()) {
-      validateEmail(text);
+      validateEmailField(text);
     } else {
       setEmailError('');
     }
@@ -249,7 +244,7 @@ const LoginScreen = () => {
     setPassword(text);
     setError('');
     if (text.trim()) {
-      validatePassword(text);
+      validatePasswordField(text);
     } else {
       setPasswordError('');
     }
@@ -257,8 +252,8 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     setError('');
-    const isEmailValid = validateEmail(email);
-    const isPasswordValid = validatePassword(password);
+    const isEmailValid = validateEmailField(email);
+    const isPasswordValid = validatePasswordField(password);
 
     if (!isEmailValid || !isPasswordValid) {
       return;
@@ -272,12 +267,8 @@ const LoginScreen = () => {
       setError(result.error || 'Login failed. Please try again.');
       setIsLoggingIn(false);
     } else {
-      // Show success message
-      Alert.alert(
-        'Welcome Back!',
-        'You have successfully logged in.',
-        [{ text: 'OK' }]
-      );
+      // Show success toast
+      toast.success('Welcome back! You have successfully logged in.');
       // Navigation will automatically switch to main app via RootNavigator
     }
   };
@@ -317,7 +308,7 @@ const LoginScreen = () => {
                     placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     value={email}
                     onChangeText={handleEmailChange}
-                    onBlur={() => validateEmail(email)}
+                    onBlur={() => validateEmailField(email)}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
@@ -341,7 +332,7 @@ const LoginScreen = () => {
                     placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     value={password}
                     onChangeText={handlePasswordChange}
-                    onBlur={() => validatePassword(password)}
+                    onBlur={() => validatePasswordField(password)}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoComplete="password"

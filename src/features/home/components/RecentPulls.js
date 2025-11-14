@@ -152,7 +152,7 @@ const TimeText = styled.Text`
   opacity: 0.6;
 `;
 
-const RecentPulls = ({ pulls }) => {
+const RecentPulls = React.memo(({ pulls }) => {
   // Sample recent pulls data - replace with real data from your API/state
   const defaultPulls = [
     {
@@ -302,6 +302,8 @@ const RecentPulls = ({ pulls }) => {
       </Carousel>
     </Container>
   );
-};
+});
+
+RecentPulls.displayName = 'RecentPulls';
 
 export default RecentPulls;

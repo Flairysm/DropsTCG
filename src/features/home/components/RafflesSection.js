@@ -214,7 +214,7 @@ const ViewDetailsText = styled.Text`
   margin-right: 4px;
 `;
 
-const RafflesSection = ({ raffles }) => {
+const RafflesSection = React.memo(({ raffles }) => {
   const navigation = useNavigation();
 
   // Sample raffle data - replace with real data from your API/state
@@ -381,6 +381,8 @@ const RafflesSection = ({ raffles }) => {
       </Carousel>
     </Container>
   );
-};
+});
+
+RafflesSection.displayName = 'RafflesSection';
 
 export default RafflesSection;

@@ -6,6 +6,10 @@
  */
 
 import { supabase } from '../../infrastructure/supabase';
+import { handleError, ERROR_TYPES, createErrorResponse } from '../../utils/error-handler';
+import { logger } from '../../utils/logger';
+import { validateEmail, validatePassword } from '../../utils/validation';
+import { TABLES } from '../../constants/tables';
 
 /**
  * Login with email and password
@@ -15,74 +19,27 @@ import { supabase } from '../../infrastructure/supabase';
  */
 export const login = async (email, password) => {
   try {
-    // Validate input
-    if (!email || !email.trim()) {
-      return {
-        success: false,
-        error: 'Email is required',
-      };
+    // Validate input using validation utilities
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      return createErrorResponse(emailValidation.error, ERROR_TYPES.VALIDATION);
     }
 
-    if (!password || password.length < 6) {
-      return {
-        success: false,
-        error: 'Password must be at least 6 characters',
-      };
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      return {
-        success: false,
-        error: 'Please enter a valid email address',
-      };
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return createErrorResponse(passwordValidation.error, ERROR_TYPES.VALIDATION);
     }
 
     // Supabase authentication
+    logger.debug('Attempting login', { email: email.trim() });
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password: password,
     });
 
     if (error) {
-      // Provide user-friendly error messages
-      let errorMessage = 'Login failed. Please try again.';
-      
-      if (error.message) {
-        const errorMsg = error.message.toLowerCase();
-        
-        // Check for specific error types
-        if (errorMsg.includes('email not confirmed') || 
-            errorMsg.includes('email not verified') ||
-            errorMsg.includes('email_not_confirmed')) {
-          errorMessage = 'Please verify your email address before signing in. Check your inbox for the verification link.';
-        } else if (errorMsg.includes('invalid login credentials') || 
-                   errorMsg.includes('invalid credentials') ||
-                   error.code === 'invalid_credentials' ||
-                   error.code === 'invalid_grant') {
-          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-        } else if (errorMsg.includes('too many requests') || 
-                   error.code === 'too_many_requests' ||
-                   error.code === 'rate_limit_exceeded') {
-          errorMessage = 'Too many login attempts. Please wait a few minutes and try again.';
-        } else if (errorMsg.includes('user not found') ||
-                   errorMsg.includes('user_not_found')) {
-          errorMessage = 'No account found with this email address. Please check your email or sign up.';
-        } else if (errorMsg.includes('network') || 
-                   errorMsg.includes('connection') ||
-                   errorMsg.includes('fetch')) {
-          errorMessage = 'Network error. Please check your internet connection and try again.';
-        } else {
-          // Use the error message if it's user-friendly, otherwise use generic message
-          errorMessage = error.message || 'Login failed. Please check your credentials and try again.';
-        }
-      }
-      
-      return {
-        success: false,
-        error: errorMessage,
-      };
+      const errorResult = handleError(error, 'login', false);
+      return createErrorResponse(errorResult.message, errorResult.type, error);
     }
 
     // Get user profile data if available
@@ -91,7 +48,7 @@ export const login = async (email, password) => {
       // Try to fetch additional user profile data from user_profiles table
       try {
         const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
+          .from(TABLES.USER_PROFILES)
           .select('*')
           .eq('id', data.user.id)
           .single();
@@ -106,7 +63,7 @@ export const login = async (email, password) => {
         }
       } catch (err) {
         // If users table doesn't exist or query fails, use basic user data
-        console.log('Could not fetch user profile:', err);
+        logger.warn('Could not fetch user profile', err);
       }
     }
 
@@ -122,11 +79,8 @@ export const login = async (email, password) => {
       session: data.session,
     };
   } catch (error) {
-    console.error('Login error:', error);
-    return {
-      success: false,
-      error: error.message || 'An unexpected error occurred. Please try again.',
-    };
+    const errorResult = handleError(error, 'login', false);
+    return createErrorResponse(errorResult.message, errorResult.type, error);
   }
 };
 
@@ -168,7 +122,7 @@ export const checkAuthStatus = async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error) {
-      console.error('Error getting session:', error);
+      logger.warn('Error getting session', error);
       return {
         isAuthenticated: false,
       };
@@ -179,7 +133,7 @@ export const checkAuthStatus = async () => {
       let userProfile = null;
       try {
         const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
+          .from(TABLES.USER_PROFILES)
           .select('*')
           .eq('id', session.user.id)
           .single();
@@ -194,7 +148,7 @@ export const checkAuthStatus = async () => {
         }
       } catch (err) {
         // If users table doesn't exist or query fails, use basic user data
-        console.log('Could not fetch user profile:', err);
+        logger.warn('Could not fetch user profile', err);
       }
 
       return {
@@ -213,7 +167,7 @@ export const checkAuthStatus = async () => {
       isAuthenticated: false,
     };
   } catch (error) {
-    console.error('Check auth status error:', error);
+    logger.error('Check auth status error', error);
     return {
       isAuthenticated: false,
     };
@@ -281,7 +235,7 @@ export const register = async (email, password, username, phoneNumber = null) =>
     // Don't create profile here - wait for email verification
     // Profile will be created in verifyOTP function after successful verification
     
-    console.log('Registration result:', {
+    logger.debug('Registration result', {
       hasUser: !!data.user,
       hasSession: !!data.session,
       requiresVerification,
@@ -299,11 +253,8 @@ export const register = async (email, password, username, phoneNumber = null) =>
       } : null,
     };
   } catch (error) {
-    console.error('Registration error:', error);
-    return {
-      success: false,
-      error: error.message || 'An unexpected error occurred. Please try again.',
-    };
+    const errorResult = handleError(error, 'register', false);
+    return createErrorResponse(errorResult.message, errorResult.type, error);
   }
 };
 
@@ -330,7 +281,7 @@ export const verifyOTP = async (email, token) => {
     }
 
     // Verify OTP with Supabase
-    console.log('Verifying OTP for email:', email.trim());
+    logger.debug('Verifying OTP', { email: email.trim() });
     const { data, error } = await supabase.auth.verifyOtp({
       email: email.trim(),
       token: token,
@@ -338,24 +289,25 @@ export const verifyOTP = async (email, token) => {
     });
 
     if (error) {
-      console.error('OTP verification error:', error);
-      return {
-        success: false,
-        error: error.message || 'Invalid verification code. Please try again.',
-      };
+      const errorResult = handleError(error, 'verifyOTP', false);
+      return createErrorResponse(
+        errorResult.message || 'Invalid verification code. Please try again.',
+        errorResult.type,
+        error
+      );
     }
 
-    console.log('OTP verified successfully, user ID:', data.user?.id);
+    logger.info('OTP verified successfully', { userId: data.user?.id });
 
     // After successful verification, create user profile
     if (data.user) {
-      console.log('Creating user profile for verified user:', data.user.id);
+      logger.debug('Creating user profile for verified user', { userId: data.user.id });
       try {
         // Get user metadata
         const username = data.user.user_metadata?.username || data.user.email?.split('@')[0];
         const phoneNumber = data.user.user_metadata?.phone_number || null;
 
-        console.log('Profile data:', { username, phoneNumber, email: data.user.email });
+        logger.debug('Profile data', { username, phoneNumber, email: data.user.email });
 
         // Build profile data
         const profileData = {
@@ -373,42 +325,42 @@ export const verifyOTP = async (email, token) => {
           updated_at: new Date().toISOString(),
         };
 
-        console.log('Inserting profile with data:', fullProfileData);
+        logger.debug('Inserting profile', { userId: fullProfileData.id });
         let { error: profileError } = await supabase
-          .from('user_profiles')
+          .from(TABLES.USER_PROFILES)
           .insert([fullProfileData]);
 
         // If error about missing columns, try with minimal fields
         if (profileError && (profileError.code === 'PGRST204' || profileError.message.includes('column'))) {
-          console.log('Retrying with minimal profile data:', profileError.message);
+          logger.warn('Retrying with minimal profile data', { error: profileError.message });
           ({ error: profileError } = await supabase
-            .from('user_profiles')
+            .from(TABLES.USER_PROFILES)
             .insert([profileData]));
         }
 
         if (profileError) {
-          console.error('Could not create user profile after verification:', profileError);
+          logger.warn('Could not create user profile after verification', profileError);
           // If RLS error, try again - user should be authenticated now
           if (profileError.code === '42501') {
-            console.log('RLS error, retrying profile creation...');
+            logger.debug('RLS error, retrying profile creation');
             // Wait a bit and retry
             await new Promise(resolve => setTimeout(resolve, 500));
             ({ error: profileError } = await supabase
-              .from('user_profiles')
+              .from(TABLES.USER_PROFILES)
               .insert([fullProfileData]));
             
             if (profileError) {
-              console.error('Still failed to create profile after retry:', profileError);
+              logger.error('Still failed to create profile after retry', profileError);
             } else {
-              console.log('Profile created successfully after retry');
+              logger.info('Profile created successfully after retry');
             }
           }
           // Continue anyway - user is verified, profile can be created later
         } else {
-          console.log('User profile created successfully after OTP verification');
+          logger.info('User profile created successfully after OTP verification');
         }
       } catch (err) {
-        console.error('Error creating user profile after verification:', err);
+        logger.error('Error creating user profile after verification', err);
         // Continue anyway - user is verified
       }
     }
@@ -418,7 +370,7 @@ export const verifyOTP = async (email, token) => {
     if (data.user) {
       try {
         const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
+          .from(TABLES.USER_PROFILES)
           .select('*')
           .eq('id', data.user.id)
           .single();
@@ -432,7 +384,7 @@ export const verifyOTP = async (email, token) => {
           };
         }
       } catch (err) {
-        console.log('Could not fetch user profile:', err);
+        logger.warn('Could not fetch user profile', err);
       }
     }
 
@@ -448,11 +400,8 @@ export const verifyOTP = async (email, token) => {
       session: data.session,
     };
   } catch (error) {
-    console.error('Verify OTP error:', error);
-    return {
-      success: false,
-      error: error.message || 'An unexpected error occurred. Please try again.',
-    };
+    const errorResult = handleError(error, 'verifyOTP', false);
+    return createErrorResponse(errorResult.message, errorResult.type, error);
   }
 };
 
@@ -477,21 +426,21 @@ export const resendOTP = async (email) => {
     });
 
     if (error) {
-      return {
-        success: false,
-        error: error.message || 'Failed to resend verification code. Please try again.',
-      };
+      const errorResult = handleError(error, 'resendOTP', false);
+      return createErrorResponse(
+        errorResult.message || 'Failed to resend verification code. Please try again.',
+        errorResult.type,
+        error
+      );
     }
 
+    logger.info('OTP resend successful', { email: email.trim() });
     return {
       success: true,
     };
   } catch (error) {
-    console.error('Resend OTP error:', error);
-    return {
-      success: false,
-      error: error.message || 'An unexpected error occurred. Please try again.',
-    };
+    const errorResult = handleError(error, 'resendOTP', false);
+    return createErrorResponse(errorResult.message, errorResult.type, error);
   }
 };
 

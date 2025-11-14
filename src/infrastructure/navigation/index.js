@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../../services/authentication/authentication.context';
+import { logger } from '../../utils/logger';
 import { AppNavigator } from './app.navigator';
 
 const Stack = createNativeStackNavigator();
@@ -15,8 +16,8 @@ export const RootNavigator = () => {
 
   // Navigate to VerifyOTP when pendingVerificationEmail is set
   useEffect(() => {
-    if (pendingVerificationEmail && navigationRef.current && !hasNavigatedToOTP.current) {
-      console.log('RootNavigator - Navigating to VerifyOTP for:', pendingVerificationEmail);
+      if (pendingVerificationEmail && navigationRef.current && !hasNavigatedToOTP.current) {
+      logger.debug('RootNavigator - Navigating to VerifyOTP', { email: pendingVerificationEmail });
       hasNavigatedToOTP.current = true;
       setTimeout(() => {
         try {
@@ -31,7 +32,7 @@ export const RootNavigator = () => {
             },
           });
         } catch (error) {
-          console.error('RootNavigator navigation error:', error);
+          logger.error('RootNavigator navigation error', error);
         }
       }, 100);
     } else if (!pendingVerificationEmail) {

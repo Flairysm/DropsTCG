@@ -93,7 +93,7 @@ const PaginationDot = styled.TouchableOpacity`
   margin-right: ${(props) => (props.isLast ? '0px' : '8px')};
 `;
 
-const FeaturedSection = ({ events }) => {
+const FeaturedSection = React.memo(({ events }) => {
   const scrollViewRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -169,6 +169,8 @@ const FeaturedSection = ({ events }) => {
       )}
     </Container>
   );
-};
+});
+
+FeaturedSection.displayName = 'FeaturedSection';
 
 export default FeaturedSection;

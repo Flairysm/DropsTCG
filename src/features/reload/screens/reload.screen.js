@@ -6,7 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Alert,
+  View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +14,10 @@ import styled, { useTheme } from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../services/authentication/authentication.context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { supabase } from '../../../infrastructure/supabase';
+import { userProfilesApi } from '../../../services/api/api.service';
+import { toast } from '../../../components/Toast';
+import { logger } from '../../../utils/logger';
+import { InlineLoader, OverlayLoader, ButtonLoader } from '../../../components/LoadingIndicator';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -279,6 +282,8 @@ export default function ReloadScreen() {
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
   const [currentTokens, setCurrentTokens] = useState(0);
+  const [isReloading, setIsReloading] = useState(false);
+  const [isFetchingBalance, setIsFetchingBalance] = useState(false);
 
   // Redirect to login if not authenticated
   useFocusEffect(
@@ -294,25 +299,24 @@ export default function ReloadScreen() {
     }, [isAuthenticated, navigation])
   );
 
-  // Fetch current token balance from Supabase
+  // Fetch current token balance using API service
   const fetchTokenBalance = useCallback(async () => {
     if (!user?.id) return;
 
+    setIsFetchingBalance(true);
     try {
-      const { data: profile, error } = await supabase
-        .from('user_profiles')
-        .select('token_balance')
-        .eq('id', user.id)
-        .single();
+      const result = await userProfilesApi.getById(user.id);
 
-      if (!error && profile) {
-        setCurrentTokens(profile.token_balance || 0);
+      if (result.success && result.data) {
+        setCurrentTokens(result.data.token_balance || 0);
       } else {
         setCurrentTokens(user.tokenBalance || 0);
       }
     } catch (err) {
-      console.log('Could not fetch token balance:', err);
+      logger.warn('Could not fetch token balance', err);
       setCurrentTokens(user.tokenBalance || 0);
+    } finally {
+      setIsFetchingBalance(false);
     }
   }, [user]);
 
@@ -361,56 +365,41 @@ export default function ReloadScreen() {
 
   const handleReload = useCallback(async () => {
     if (selectedRM <= 0) {
-      // Show error - no amount selected
+      toast.error('Please select an amount to reload');
       return;
     }
 
     if (!user?.id) {
-      console.error('User not authenticated');
+      logger.warn('User not authenticated for reload');
       return;
     }
 
+    setIsReloading(true);
     try {
       // TODO: Implement payment processing
       // For now, simulate adding tokens to balance
       const tokensToAdd = totalTokens;
       
-      // Update token balance in user_profiles table
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('token_balance')
-        .eq('id', user.id)
-        .single();
+      // Update token balance using API service
+      const result = await userProfilesApi.updateTokenBalance(user.id, tokensToAdd);
 
-      const newBalance = (profile?.token_balance || 0) + tokensToAdd;
-
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ 
-          token_balance: newBalance,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Error updating token balance:', error);
-        Alert.alert('Error', 'Failed to reload tokens. Please try again.');
-      } else {
+      if (result.success) {
         // Refresh token balance
         await fetchTokenBalance();
         // Reset form
         setSelectedAmount(null);
         setCustomAmount('');
         // Show success message
-        Alert.alert(
-          'Success!',
-          `Successfully reloaded ${totalTokens.toLocaleString()} tokens!`,
-          [{ text: 'OK' }]
-        );
+        toast.success(`Successfully reloaded ${totalTokens.toLocaleString()} tokens!`);
+      } else {
+        logger.error('Error updating token balance', result.error);
+        toast.error('Failed to reload tokens. Please try again.');
       }
     } catch (error) {
-      console.error('Error processing reload:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      logger.error('Error processing reload', error);
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsReloading(false);
     }
   }, [selectedRM, totalTokens, user, fetchTokenBalance]);
 
@@ -528,15 +517,28 @@ export default function ReloadScreen() {
 
             {/* Reload Button */}
             <ReloadButton
-              disabled={selectedRM <= 0}
+              disabled={selectedRM <= 0 || isReloading}
               onPress={handleReload}
               activeOpacity={0.8}
             >
-              <ReloadButtonText>Reload</ReloadButtonText>
+              {isReloading ? (
+                <>
+                  <ButtonLoader color="#0a0019" />
+                  <ReloadButtonText>Processing...</ReloadButtonText>
+                </>
+              ) : (
+                <ReloadButtonText>Reload</ReloadButtonText>
+              )}
             </ReloadButton>
           </ScrollContent>
         </StyledScrollView>
       </KeyboardView>
+      <OverlayLoader visible={isReloading} message="Processing your reload..." />
+      {isFetchingBalance && (
+        <View style={{ position: 'absolute', top: 100, right: 20 }}>
+          <InlineLoader size="small" />
+        </View>
+      )}
     </Container>
   );
 }

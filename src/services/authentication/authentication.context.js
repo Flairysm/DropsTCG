@@ -6,7 +6,9 @@
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { TABLES } from '../../constants/tables';
 import { supabase } from '../../infrastructure/supabase';
+import { logger } from '../../utils/logger';
 import { checkAuthStatus, login as loginService, logout as logoutService, register as registerService, resendOTP as resendOTPService, verifyOTP as verifyOTPService } from './authentication.service';
 
 const AuthContext = createContext(null);
@@ -33,7 +35,7 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(authenticated);
         setUser(currentUser || null);
       } catch (error) {
-        console.error('Error checking auth status:', error);
+        logger.error('Error checking auth status', error);
         setIsAuthenticated(false);
         setUser(null);
       } finally {
@@ -50,7 +52,7 @@ export const AuthProvider = ({ children }) => {
           // Fetch user profile data
           try {
             const { data: profile, error: profileError } = await supabase
-              .from('user_profiles')
+              .from(TABLES.USER_PROFILES)
               .select('*')
               .eq('id', session.user.id)
               .single();
@@ -108,7 +110,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error in context', error);
       return {
         success: false,
         error: error.message || 'An unexpected error occurred',
@@ -133,7 +135,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('Logout error in context', error);
       // Even if there's an error, clear local state
       setUser(null);
       setIsAuthenticated(false);
@@ -153,14 +155,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await registerService(email, password, username, phoneNumber);
       
-      console.log('Auth context - register result:', result);
+      logger.debug('Auth context - register result', { requiresVerification: result.requiresVerification });
       
       if (result.success) {
         // If verification is required, don't set user as authenticated yet
         if (result.requiresVerification) {
           // Store the email that needs verification
           const emailToVerify = result.user?.email || email;
-          console.log('Auth context - Setting pendingVerificationEmail to:', emailToVerify);
+          logger.debug('Auth context - Setting pendingVerificationEmail', { email: emailToVerify });
           setPendingVerificationEmail(emailToVerify);
           setIsLoading(false); // Set loading to false so RootNavigator can render
           return { success: true, requiresVerification: true, user: result.user };
@@ -175,7 +177,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      logger.error('Registration error in context', error);
       setIsLoading(false);
       return {
         success: false,
@@ -199,7 +201,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('Verify OTP error:', error);
+      logger.error('Verify OTP error in context', error);
       return {
         success: false,
         error: error.message || 'An unexpected error occurred',
@@ -215,7 +217,7 @@ export const AuthProvider = ({ children }) => {
       const result = await resendOTPService(email);
       return result;
     } catch (error) {
-      console.error('Resend OTP error:', error);
+      logger.error('Resend OTP error in context', error);
       return {
         success: false,
         error: error.message || 'An unexpected error occurred',

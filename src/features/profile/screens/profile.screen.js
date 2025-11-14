@@ -14,7 +14,12 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import styled, { useTheme } from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../services/authentication/authentication.context';
-import { supabase } from '../../../infrastructure/supabase';
+import { userProfilesApi } from '../../../services/api/api.service';
+import { toast } from '../../../components/Toast';
+import { logger } from '../../../utils/logger';
+import { FullScreenLoader, SkeletonLoader } from '../../../components/LoadingIndicator';
+import { SkeletonProfileHeader, SkeletonListItem } from '../../../components/SkeletonLoader';
+import { useUserCardStats, useRaffleParticipationCount, usePackOpeningCount } from '../../../hooks';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -260,90 +265,51 @@ export default function ProfileScreen() {
     }, [isAuthenticated, navigation])
   );
 
+  // Use custom hooks for stats
+  const { stats: cardStats, loading: cardsLoading } = useUserCardStats({ enabled: !!user });
+  const { count: rafflesJoined, loading: rafflesLoading } = useRaffleParticipationCount({ enabled: !!user });
+  const { count: packsOpened, loading: packsLoading } = usePackOpeningCount({ enabled: !!user });
+
   const fetchUserProfile = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
     }
 
+    setLoading(true);
     try {
-      // Fetch user profile from Supabase
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // Fetch user profile using API service
+      const result = await userProfilesApi.getById(user.id);
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        // PGRST116 means no rows returned, which is okay for new users
-        console.error('Error fetching user profile:', profileError);
+      if (result.success && result.data) {
+        const profile = result.data;
+        setUserData({
+          username: profile.username || user.username || user.email?.split('@')[0] || 'User',
+          email: user.email || '',
+          phone_number: profile.phone_number || null,
+          avatar: profile.avatar || null,
+          tokenBalance: profile.token_balance || user.tokenBalance || 0,
+          totalCards: cardStats.totalCards || 0,
+          rareCards: cardStats.rareCards || 0,
+          rafflesJoined: rafflesJoined || 0,
+          packsOpened: packsOpened || 0,
+        });
+      } else {
+        // No profile found, use fallback data
+        setUserData({
+          username: user.username || user.email?.split('@')[0] || 'User',
+          email: user.email || '',
+          phone_number: null,
+          avatar: null,
+          tokenBalance: user.tokenBalance || 0,
+          totalCards: cardStats.totalCards || 0,
+          rareCards: cardStats.rareCards || 0,
+          rafflesJoined: rafflesJoined || 0,
+          packsOpened: packsOpened || 0,
+        });
       }
-
-      // Fetch additional stats if tables exist
-      let totalCards = 0;
-      let rareCards = 0;
-      let rafflesJoined = 0;
-      let packsOpened = 0;
-
-      try {
-        // Try to fetch card count
-        const { count: cardCount } = await supabase
-          .from('user_cards')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        totalCards = cardCount || 0;
-
-        // Try to fetch rare cards count (SSS, SS, S tiers)
-        const { count: rareCount } = await supabase
-          .from('user_cards')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .in('tier', ['SSS', 'SS', 'S']);
-
-        rareCards = rareCount || 0;
-      } catch (err) {
-        // Tables might not exist yet
-        console.log('Could not fetch card stats:', err);
-      }
-
-      try {
-        // Try to fetch raffle participation count
-        const { count: raffleCount } = await supabase
-          .from('raffle_participants')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        rafflesJoined = raffleCount || 0;
-      } catch (err) {
-        console.log('Could not fetch raffle stats:', err);
-      }
-
-      try {
-        // Try to fetch pack opening count
-        const { count: packCount } = await supabase
-          .from('pack_openings')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        packsOpened = packCount || 0;
-      } catch (err) {
-        console.log('Could not fetch pack stats:', err);
-      }
-
-      setUserData({
-        username: profile?.username || user.username || user.email?.split('@')[0] || 'User',
-        email: user.email || '',
-        phone_number: profile?.phone_number || null,
-        avatar: profile?.avatar || null,
-        tokenBalance: profile?.token_balance || user.tokenBalance || 0,
-        totalCards,
-        rareCards,
-        rafflesJoined,
-        packsOpened,
-      });
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      logger.error('Error fetching user data', error);
       // Set fallback data from auth context
       setUserData({
         username: user.username || user.email?.split('@')[0] || 'User',
@@ -351,19 +317,22 @@ export default function ProfileScreen() {
         phone_number: null,
         avatar: null,
         tokenBalance: user.tokenBalance || 0,
-        totalCards: 0,
-        rareCards: 0,
-        rafflesJoined: 0,
-        packsOpened: 0,
+        totalCards: cardStats.totalCards || 0,
+        rareCards: cardStats.rareCards || 0,
+        rafflesJoined: rafflesJoined || 0,
+        packsOpened: packsOpened || 0,
       });
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, cardStats, rafflesJoined, packsOpened]);
 
   useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
+    // Only fetch profile when stats are loaded
+    if (!cardsLoading && !rafflesLoading && !packsLoading) {
+      fetchUserProfile();
+    }
+  }, [fetchUserProfile, cardsLoading, rafflesLoading, packsLoading]);
 
   // Refresh profile when screen comes into focus
   useFocusEffect(
@@ -378,27 +347,23 @@ export default function ProfileScreen() {
         const result = await logout();
         if (result.success) {
           // Show success message
-          Alert.alert(
-            'Logged Out',
-            'You have successfully logged out.',
-            [{ text: 'OK' }]
-          );
+          toast.success('You have successfully logged out.');
+          logger.info('Logout successful');
           // Navigation will automatically switch to login via RootNavigator
           // when isAuthenticated becomes false
-          console.log('Logout successful');
         } else {
-          console.error('Logout failed:', result.error);
-          Alert.alert('Error', 'Failed to logout. Please try again.');
+          logger.error('Logout failed', { error: result.error });
+          toast.error('Failed to logout. Please try again.');
           // Still try to navigate - state should be cleared
         }
       } catch (error) {
-        console.error('Logout error:', error);
-        Alert.alert('Error', 'An error occurred during logout.');
+        logger.error('Logout error', error);
+        toast.error('An error occurred during logout.');
         // State should still be cleared, navigation should happen
       }
     } else {
       // TODO: Implement navigation to other routes when screens are created
-      console.log('Navigate to:', item.route);
+      logger.debug('Navigate to', { route: item.route });
     }
   }, [logout]);
 
@@ -413,9 +378,14 @@ export default function ProfileScreen() {
             translucent={false}
           />
         )}
-        <CenterContent>
-          <ActivityIndicator size="large" color={theme.colors.accent} />
-        </CenterContent>
+        <StyledScrollView>
+          <ScrollContent>
+            <SkeletonProfileHeader />
+            <SkeletonListItem />
+            <SkeletonListItem />
+            <SkeletonListItem />
+          </ScrollContent>
+        </StyledScrollView>
       </Container>
     );
   }

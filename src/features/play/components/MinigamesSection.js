@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dimensions, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { logger } from '../../../utils/logger';
 import styled, { useTheme } from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -147,7 +148,7 @@ export default function MinigamesSection({ games, category }) {
   const handleGamePress = (gameId) => {
     // TODO: Navigate to minigame screen
     // navigation.navigate('Minigame', { id: gameId, category });
-    console.log('Navigate to minigame:', gameId, category);
+    logger.debug('Navigate to minigame', { gameId, category });
   };
 
   return (

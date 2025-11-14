@@ -44,7 +44,7 @@ const SubtitleText = styled.Text`
   opacity: 0.7;
 `;
 
-const WelcomeSection = ({ userName }) => {
+const WelcomeSection = React.memo(({ userName }) => {
   const theme = useTheme();
   // Default to "Player" if no username provided
   const displayName = userName || 'Player';
@@ -64,6 +64,8 @@ const WelcomeSection = ({ userName }) => {
       </Content>
     </Container>
   );
-};
+});
+
+WelcomeSection.displayName = 'WelcomeSection';
 
 export default WelcomeSection;

@@ -13,7 +13,7 @@ export const AccountNavigator = () => {
   // Determine initial route based on pending verification
   const initialRouteName = pendingVerificationEmail ? 'VerifyOTP' : 'Login';
   
-  console.log('AccountNavigator - pendingVerificationEmail:', pendingVerificationEmail, 'initialRouteName:', initialRouteName);
+  // Logger will be used if needed for debugging
   
   return (
     <Stack.Navigator 

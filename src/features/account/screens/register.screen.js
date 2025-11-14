@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { useAuth } from '../../../services/authentication/authentication.context';
+import { logger } from '../../../utils/logger';
 
 const Container = styled.View`
   flex: 1;
@@ -389,21 +390,21 @@ const RegisterScreen = () => {
 
     const result = await register(email.trim(), password, username.trim(), phoneNumber.trim());
 
-    console.log('Register screen result:', result);
+    logger.debug('Register screen result', { requiresVerification: result.requiresVerification });
 
     if (result.success) {
       // If verification is required (which it should be with Supabase email confirmation)
       if (result.requiresVerification) {
-        console.log('Registration requires verification, navigating to VerifyOTP screen');
+        logger.debug('Registration requires verification, navigating to VerifyOTP screen');
         setIsRegistering(false);
         // Navigate to VerifyOTP screen
         // Use a small delay to ensure state updates are processed
         setTimeout(() => {
-          console.log('Navigating to VerifyOTP with email:', email.trim());
+          logger.debug('Navigating to VerifyOTP', { email: email.trim() });
           try {
             navigation.replace('VerifyOTP', { email: email.trim() });
           } catch (error) {
-            console.error('Navigation error:', error);
+            logger.error('Navigation error', error);
             // Fallback: try navigate instead
             navigation.navigate('VerifyOTP', { email: email.trim() });
           }
@@ -411,7 +412,7 @@ const RegisterScreen = () => {
         return; // Exit early
       } else {
         // If no verification needed (shouldn't happen with email confirmation enabled)
-        console.log('No verification required, redirecting to app');
+        logger.debug('No verification required, redirecting to app');
         setSuccess('Registration successful! Redirecting...');
         // Navigation will automatically switch to main app via RootNavigator
       }

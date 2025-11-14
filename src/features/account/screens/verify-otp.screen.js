@@ -4,6 +4,7 @@ import React, { useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { useAuth } from '../../../services/authentication/authentication.context';
+import { logger } from '../../../utils/logger';
 
 const Container = styled.View`
   flex: 1;
@@ -199,15 +200,15 @@ export default function VerifyOTPScreen() {
     setIsVerifying(true);
     setError('');
 
-    console.log('Verifying OTP code for email:', email);
+    logger.debug('Verifying OTP code', { email });
 
     try {
       const result = await verifyOTP(email, code);
       
-      console.log('Verify OTP result:', result);
+      logger.debug('Verify OTP result', { success: result.success });
       
       if (result.success) {
-        console.log('OTP verification successful, user should be authenticated now');
+        logger.info('OTP verification successful, user should be authenticated now');
         // Navigation will automatically switch to main app via RootNavigator
         // after successful verification
       } else {
@@ -217,7 +218,7 @@ export default function VerifyOTPScreen() {
         inputRefs.current[0]?.focus();
       }
     } catch (err) {
-      console.error('Verify OTP exception:', err);
+      logger.error('Verify OTP exception', err);
       setError('An unexpected error occurred. Please try again.');
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
