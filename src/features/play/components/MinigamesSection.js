@@ -130,7 +130,7 @@ const defaultGames = [
     rewards: 'Tier D-S rewards based on score',
   },
   {
-    id: '2',
+    id: 'energy-matching',
     name: 'Energy Match',
     description: 'Match energy cards to win',
     icon: 'flash',
@@ -148,6 +148,8 @@ export default function MinigamesSection({ games, category }) {
   const handleGamePress = (gameId) => {
     if (gameId === 'find-pikachu') {
       navigation.navigate('FindPikachu');
+    } else if (gameId === 'energy-matching') {
+      navigation.navigate('EnergyMatching');
     } else {
       logger.debug('Navigate to minigame', { gameId, category });
       // TODO: Navigate to other minigame screens when implemented

@@ -582,7 +582,7 @@ export default function FindPikachuScreen() {
         {/* Header Section */}
         <HeaderSection>
           <TitleContainer>
-            <Title>Find Pikachu</Title>
+            <Title>FIND PIKACHU</Title>
             <TitleAccent />
           </TitleContainer>
           <DescriptionContainer>

@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
+import EnergyMatchingScreen from '../../features/play/screens/energy-matching.screen';
 import FindPikachuScreen from '../../features/play/screens/find-pikachu.screen';
 import GemDropsScreen from '../../features/play/screens/gem-drops.screen';
 import MysteryBoxDetailScreen from '../../features/play/screens/mystery-box-detail.screen';
@@ -49,6 +50,13 @@ export const PlayNavigator = () => {
       <Stack.Screen
         name="FindPikachu"
         component={FindPikachuScreen}
+        options={{
+          contentStyle: { backgroundColor: 'transparent' },
+        }}
+      />
+      <Stack.Screen
+        name="EnergyMatching"
+        component={EnergyMatchingScreen}
         options={{
           contentStyle: { backgroundColor: 'transparent' },
         }}
