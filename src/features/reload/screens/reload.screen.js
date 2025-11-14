@@ -527,7 +527,7 @@ export default function ReloadScreen() {
                   <ReloadButtonText>Processing...</ReloadButtonText>
                 </>
               ) : (
-                <ReloadButtonText>Reload</ReloadButtonText>
+              <ReloadButtonText>Reload</ReloadButtonText>
               )}
             </ReloadButton>
           </ScrollContent>

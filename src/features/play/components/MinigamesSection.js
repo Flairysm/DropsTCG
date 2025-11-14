@@ -122,12 +122,12 @@ const RewardsText = styled.Text`
 
 const defaultGames = [
   {
-    id: '1',
-    name: 'Minesweeper',
-    description: 'Find the hidden treasures',
-    icon: 'grid',
+    id: 'find-pikachu',
+    name: 'Find Pikachu',
+    description: 'Find all 4 Pikachu cards. Avoid the rocks!',
+    icon: 'flash',
     entryCost: 50,
-    rewards: 'High-end cards, mystery packs, raffle entries',
+    rewards: 'Tier D-S rewards based on score',
   },
   {
     id: '2',
@@ -146,9 +146,12 @@ export default function MinigamesSection({ games, category }) {
   const displayGames = games || defaultGames;
 
   const handleGamePress = (gameId) => {
-    // TODO: Navigate to minigame screen
-    // navigation.navigate('Minigame', { id: gameId, category });
-    logger.debug('Navigate to minigame', { gameId, category });
+    if (gameId === 'find-pikachu') {
+      navigation.navigate('FindPikachu');
+    } else {
+      logger.debug('Navigate to minigame', { gameId, category });
+      // TODO: Navigate to other minigame screens when implemented
+    }
   };
 
   return (

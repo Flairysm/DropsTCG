@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
+import FindPikachuScreen from '../../features/play/screens/find-pikachu.screen';
 import GemDropsScreen from '../../features/play/screens/gem-drops.screen';
 import MysteryBoxDetailScreen from '../../features/play/screens/mystery-box-detail.screen';
 import PlayScreen from '../../features/play/screens/play.screen';
@@ -41,6 +42,13 @@ export const PlayNavigator = () => {
       <Stack.Screen
         name="Raffle"
         component={RaffleDetailScreen}
+        options={{
+          contentStyle: { backgroundColor: 'transparent' },
+        }}
+      />
+      <Stack.Screen
+        name="FindPikachu"
+        component={FindPikachuScreen}
         options={{
           contentStyle: { backgroundColor: 'transparent' },
         }}
