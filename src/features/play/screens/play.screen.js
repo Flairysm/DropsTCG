@@ -8,7 +8,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import styled, { useTheme } from 'styled-components/native';
+import { useAuth } from '../../../services/authentication/authentication.context';
 import RafflesSection from '../../home/components/RafflesSection';
 import GemDropsSection from '../components/GemDropsSection';
 import MinigamesSection from '../components/MinigamesSection';
@@ -94,7 +96,23 @@ const categories = ['Pokemon', 'Sports', 'One Piece'];
 
 export default function PlayScreen() {
   const theme = useTheme();
+  const navigation = useNavigation();
+  const { isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('Pokemon');
+
+  // Redirect to login if not authenticated
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!isAuthenticated) {
+        const parent = navigation.getParent()?.getParent();
+        if (parent) {
+          parent.navigate('Account', { screen: 'Login' });
+        } else {
+          navigation.getParent()?.navigate('Account', { screen: 'Login' });
+        }
+      }
+    }, [isAuthenticated, navigation])
+  );
 
   return (
     <Container edges={['left', 'right']}>

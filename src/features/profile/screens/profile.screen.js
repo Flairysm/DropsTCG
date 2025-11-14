@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -241,9 +242,23 @@ const menuItems = [
 export default function ProfileScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Redirect to login if not authenticated
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!isAuthenticated) {
+        const parent = navigation.getParent()?.getParent();
+        if (parent) {
+          parent.navigate('Account', { screen: 'Login' });
+        } else {
+          navigation.getParent()?.navigate('Account', { screen: 'Login' });
+        }
+      }
+    }, [isAuthenticated, navigation])
+  );
 
   const fetchUserProfile = useCallback(async () => {
     if (!user) {
@@ -362,15 +377,23 @@ export default function ProfileScreen() {
       try {
         const result = await logout();
         if (result.success) {
+          // Show success message
+          Alert.alert(
+            'Logged Out',
+            'You have successfully logged out.',
+            [{ text: 'OK' }]
+          );
           // Navigation will automatically switch to login via RootNavigator
           // when isAuthenticated becomes false
           console.log('Logout successful');
         } else {
           console.error('Logout failed:', result.error);
+          Alert.alert('Error', 'Failed to logout. Please try again.');
           // Still try to navigate - state should be cleared
         }
       } catch (error) {
         console.error('Logout error:', error);
+        Alert.alert('Error', 'An error occurred during logout.');
         // State should still be cleared, navigation should happen
       }
     } else {

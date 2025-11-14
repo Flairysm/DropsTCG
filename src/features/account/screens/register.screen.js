@@ -99,6 +99,12 @@ const Input = styled.TextInput`
   min-height: 50px;
 `;
 
+const PasswordToggle = styled(TouchableOpacity)`
+  padding: 12px;
+  justify-content: center;
+  align-items: center;
+`;
+
 const ErrorText = styled.Text`
   color: ${(props) => props.theme.colors.error};
   font-size: 13px;
@@ -107,13 +113,35 @@ const ErrorText = styled.Text`
   font-weight: 500;
 `;
 
+const FieldError = styled.Text`
+  color: ${(props) => props.theme.colors.error};
+  font-size: 12px;
+  margin-top: 6px;
+  margin-left: 4px;
+  font-weight: 400;
+`;
+
 const SuccessText = styled.Text`
-  color: ${(props) => props.theme.colors.success};
+  color: ${(props) => props.theme.colors.success || '#4ade80'};
   font-size: 13px;
   margin-top: 8px;
   margin-left: 4px;
   font-weight: 500;
   text-align: center;
+`;
+
+const PasswordMatchContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-top: 6px;
+  margin-left: 4px;
+`;
+
+const PasswordMatchText = styled.Text`
+  font-size: 12px;
+  font-weight: 400;
+  color: ${(props) => props.isMatch ? (props.theme.colors.success || '#4ade80') : 'rgba(255, 255, 255, 0.5)'};
+  margin-left: 4px;
 `;
 
 const PasswordRequirement = styled.Text`
@@ -200,66 +228,153 @@ const RegisterScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  
+  // Field-specific errors
+  const [usernameError, setUsernameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+
+  const validateUsername = (usernameValue) => {
+    if (!usernameValue.trim()) {
+      setUsernameError('Username is required');
+      return false;
+    }
+    if (usernameValue.trim().length < 3) {
+      setUsernameError('Username must be at least 3 characters');
+      return false;
+    }
+    setUsernameError('');
+    return true;
+  };
+
+  const validateEmail = (emailValue) => {
+    if (!emailValue.trim()) {
+      setEmailError('Email is required');
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailValue.trim())) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const validatePhone = (phoneValue) => {
+    if (!phoneValue.trim()) {
+      setPhoneError('Phone number is required');
+      return false;
+    }
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    if (!phoneRegex.test(phoneValue.trim())) {
+      setPhoneError('Please enter a valid phone number');
+      return false;
+    }
+    const digitsOnly = phoneValue.replace(/\D/g, '');
+    if (digitsOnly.length < 8) {
+      setPhoneError('Phone number must contain at least 8 digits');
+      return false;
+    }
+    setPhoneError('');
+    return true;
+  };
+
+  const validatePassword = (passwordValue) => {
+    if (!passwordValue) {
+      setPasswordError('Password is required');
+      return false;
+    }
+    if (passwordValue.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      return false;
+    }
+    setPasswordError('');
+    return true;
+  };
+
+  const validateConfirmPassword = (confirmPasswordValue, passwordValue) => {
+    if (!confirmPasswordValue) {
+      setConfirmPasswordError('Please confirm your password');
+      return false;
+    }
+    if (confirmPasswordValue !== passwordValue) {
+      setConfirmPasswordError('Passwords do not match');
+      return false;
+    }
+    setConfirmPasswordError('');
+    return true;
+  };
+
+  const handleUsernameChange = (text) => {
+    setUsername(text);
+    setError('');
+    if (text.trim()) {
+      validateUsername(text);
+    } else {
+      setUsernameError('');
+    }
+  };
+
+  const handleEmailChange = (text) => {
+    setEmail(text);
+    setError('');
+    if (text.trim()) {
+      validateEmail(text);
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handlePhoneChange = (text) => {
+    setPhoneNumber(text);
+    setError('');
+    if (text.trim()) {
+      validatePhone(text);
+    } else {
+      setPhoneError('');
+    }
+  };
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    setError('');
+    if (text.trim()) {
+      validatePassword(text);
+      // Re-validate confirm password if it has a value
+      if (confirmPassword) {
+        validateConfirmPassword(confirmPassword, text);
+      }
+    } else {
+      setPasswordError('');
+    }
+  };
+
+  const handleConfirmPasswordChange = (text) => {
+    setConfirmPassword(text);
+    setError('');
+    if (text.trim()) {
+      validateConfirmPassword(text, password);
+    } else {
+      setConfirmPasswordError('');
+    }
+  };
 
   const validateForm = () => {
-    if (!username.trim()) {
-      setError('Username is required');
-      return false;
-    }
+    const isUsernameValid = validateUsername(username);
+    const isEmailValid = validateEmail(email);
+    const isPhoneValid = validatePhone(phoneNumber);
+    const isPasswordValid = validatePassword(password);
+    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword, password);
 
-    if (username.trim().length < 3) {
-      setError('Username must be at least 3 characters');
-      return false;
-    }
-
-    if (!email.trim()) {
-      setError('Email is required');
-      return false;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email.trim())) {
-      setError('Please enter a valid email address');
-      return false;
-    }
-
-    if (!password) {
-      setError('Password is required');
-      return false;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-
-    if (!phoneNumber.trim()) {
-      setError('Phone number is required');
-      return false;
-    }
-
-    // Basic phone number validation (allows numbers, +, -, spaces, parentheses)
-    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-    if (!phoneRegex.test(phoneNumber.trim())) {
-      setError('Please enter a valid phone number');
-      return false;
-    }
-
-    // Check if phone number has at least 8 digits
-    const digitsOnly = phoneNumber.replace(/\D/g, '');
-    if (digitsOnly.length < 8) {
-      setError('Phone number must contain at least 8 digits');
-      return false;
-    }
-
-    return true;
+    return isUsernameValid && isEmailValid && isPhoneValid && isPasswordValid && isConfirmPasswordValid;
   };
 
   const handleRegister = async () => {
@@ -334,112 +449,146 @@ const RegisterScreen = () => {
               <Subtitle>Sign up to start your DropsTCG journey</Subtitle>
 
               <InputContainer>
-                <InputWrapper>
+                <InputWrapper style={{ borderColor: usernameError ? theme.colors.error : theme.colors.borderLight }}>
                   <InputIcon>
                     <Ionicons 
                       name="person-outline" 
                       size={20} 
-                      color="rgba(255, 255, 255, 0.5)" 
+                      color={usernameError ? theme.colors.error : "rgba(255, 255, 255, 0.5)"} 
                     />
                   </InputIcon>
                   <Input
                     placeholder="Username *"
                     placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     value={username}
-                    onChangeText={setUsername}
+                    onChangeText={handleUsernameChange}
+                    onBlur={() => validateUsername(username)}
                     autoCapitalize="none"
                     autoComplete="username"
                     autoCorrect={false}
                   />
                 </InputWrapper>
+                {usernameError ? <FieldError>{usernameError}</FieldError> : null}
               </InputContainer>
 
               <InputContainer>
-                <InputWrapper>
+                <InputWrapper style={{ borderColor: emailError ? theme.colors.error : theme.colors.borderLight }}>
                   <InputIcon>
                     <Ionicons 
                       name="mail-outline" 
                       size={20} 
-                      color="rgba(255, 255, 255, 0.5)" 
+                      color={emailError ? theme.colors.error : "rgba(255, 255, 255, 0.5)"} 
                     />
                   </InputIcon>
                   <Input
                     placeholder="Email *"
                     placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={handleEmailChange}
+                    onBlur={() => validateEmail(email)}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
                     autoCorrect={false}
                   />
                 </InputWrapper>
+                {emailError ? <FieldError>{emailError}</FieldError> : null}
               </InputContainer>
 
               <InputContainer>
-                <InputWrapper>
+                <InputWrapper style={{ borderColor: phoneError ? theme.colors.error : theme.colors.borderLight }}>
                   <InputIcon>
                     <Ionicons 
                       name="call-outline" 
                       size={20} 
-                      color="rgba(255, 255, 255, 0.5)" 
+                      color={phoneError ? theme.colors.error : "rgba(255, 255, 255, 0.5)"} 
                     />
                   </InputIcon>
                   <Input
                     placeholder="Phone Number *"
                     placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     value={phoneNumber}
-                    onChangeText={setPhoneNumber}
+                    onChangeText={handlePhoneChange}
+                    onBlur={() => validatePhone(phoneNumber)}
                     keyboardType="phone-pad"
                     autoCapitalize="none"
                     autoComplete="tel"
                     autoCorrect={false}
                   />
                 </InputWrapper>
+                {phoneError ? <FieldError>{phoneError}</FieldError> : null}
               </InputContainer>
 
               <InputContainer>
-                <InputWrapper>
+                <InputWrapper style={{ borderColor: passwordError ? theme.colors.error : theme.colors.borderLight }}>
                   <InputIcon>
                     <Ionicons 
                       name="lock-closed-outline" 
                       size={20} 
-                      color="rgba(255, 255, 255, 0.5)" 
+                      color={passwordError ? theme.colors.error : "rgba(255, 255, 255, 0.5)"} 
                     />
                   </InputIcon>
                   <Input
                     placeholder="Password *"
                     placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
+                    onChangeText={handlePasswordChange}
+                    onBlur={() => validatePassword(password)}
+                    secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoComplete="password-new"
                     autoCorrect={false}
                   />
+                  <PasswordToggle onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
+                    <Ionicons 
+                      name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                      size={20} 
+                      color="rgba(255, 255, 255, 0.5)" 
+                    />
+                  </PasswordToggle>
                 </InputWrapper>
+                {passwordError ? <FieldError>{passwordError}</FieldError> : null}
+                {password && !passwordError && password.length >= 6 ? (
+                  <PasswordRequirement>✓ Password meets requirements</PasswordRequirement>
+                ) : null}
               </InputContainer>
 
               <InputContainer>
-                <InputWrapper>
+                <InputWrapper style={{ borderColor: confirmPasswordError ? theme.colors.error : (confirmPassword && confirmPassword === password ? (theme.colors.success || '#4ade80') : theme.colors.borderLight) }}>
                   <InputIcon>
                     <Ionicons 
                       name="lock-closed-outline" 
                       size={20} 
-                      color="rgba(255, 255, 255, 0.5)" 
+                      color={confirmPasswordError ? theme.colors.error : (confirmPassword && confirmPassword === password ? (theme.colors.success || '#4ade80') : "rgba(255, 255, 255, 0.5)")} 
                     />
                   </InputIcon>
                   <Input
                     placeholder="Confirm Password *"
                     placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
+                    onChangeText={handleConfirmPasswordChange}
+                    onBlur={() => validateConfirmPassword(confirmPassword, password)}
+                    secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
                     autoComplete="password-new"
                     autoCorrect={false}
                   />
+                  <PasswordToggle onPress={() => setShowConfirmPassword(!showConfirmPassword)} activeOpacity={0.7}>
+                    <Ionicons 
+                      name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
+                      size={20} 
+                      color="rgba(255, 255, 255, 0.5)" 
+                    />
+                  </PasswordToggle>
                 </InputWrapper>
+                {confirmPasswordError ? (
+                  <FieldError>{confirmPasswordError}</FieldError>
+                ) : confirmPassword && confirmPassword === password ? (
+                  <PasswordMatchContainer>
+                    <Ionicons name="checkmark-circle" size={14} color={theme.colors.success || '#4ade80'} />
+                    <PasswordMatchText isMatch={true}>Passwords match</PasswordMatchText>
+                  </PasswordMatchContainer>
+                ) : null}
                 {error ? <ErrorText>{error}</ErrorText> : null}
                 {success ? <SuccessText>{success}</SuccessText> : null}
               </InputContainer>
@@ -473,4 +622,5 @@ const RegisterScreen = () => {
 };
 
 export default RegisterScreen;
+
 

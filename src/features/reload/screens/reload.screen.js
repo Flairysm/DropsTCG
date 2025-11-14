@@ -6,13 +6,14 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../services/authentication/authentication.context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { supabase } from '../../../infrastructure/supabase';
 
 const Container = styled(SafeAreaView)`
@@ -273,10 +274,25 @@ const QUICK_AMOUNTS = [
 
 export default function ReloadScreen() {
   const theme = useTheme();
-  const { user } = useAuth();
+  const navigation = useNavigation();
+  const { user, isAuthenticated } = useAuth();
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
   const [currentTokens, setCurrentTokens] = useState(0);
+
+  // Redirect to login if not authenticated
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!isAuthenticated) {
+        const parent = navigation.getParent();
+        if (parent) {
+          parent.navigate('Account', { screen: 'Login' });
+        } else {
+          navigation.navigate('Account', { screen: 'Login' });
+        }
+      }
+    }, [isAuthenticated, navigation])
+  );
 
   // Fetch current token balance from Supabase
   const fetchTokenBalance = useCallback(async () => {
@@ -378,15 +394,23 @@ export default function ReloadScreen() {
 
       if (error) {
         console.error('Error updating token balance:', error);
+        Alert.alert('Error', 'Failed to reload tokens. Please try again.');
       } else {
         // Refresh token balance
         await fetchTokenBalance();
         // Reset form
         setSelectedAmount(null);
         setCustomAmount('');
+        // Show success message
+        Alert.alert(
+          'Success!',
+          `Successfully reloaded ${totalTokens.toLocaleString()} tokens!`,
+          [{ text: 'OK' }]
+        );
       }
     } catch (error) {
       console.error('Error processing reload:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     }
   }, [selectedRM, totalTokens, user, fetchTokenBalance]);
 

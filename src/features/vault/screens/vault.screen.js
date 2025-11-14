@@ -11,8 +11,10 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import styled, { useTheme } from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../../services/authentication/authentication.context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_PADDING = 16;
@@ -429,7 +431,23 @@ const CATEGORIES = ['All', 'Pokemon', 'Sports', 'One Piece'];
 
 export default function VaultScreen() {
   const theme = useTheme();
+  const navigation = useNavigation();
+  const { isAuthenticated } = useAuth();
   const [selectedCards, setSelectedCards] = useState(new Set());
+
+  // Redirect to login if not authenticated
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!isAuthenticated) {
+        const parent = navigation.getParent()?.getParent();
+        if (parent) {
+          parent.navigate('Account', { screen: 'Login' });
+        } else {
+          navigation.getParent()?.navigate('Account', { screen: 'Login' });
+        }
+      }
+    }, [isAuthenticated, navigation])
+  );
   const [showActionModal, setShowActionModal] = useState(false);
   const [actionType, setActionType] = useState(null);
   const [selectedTier, setSelectedTier] = useState('All');

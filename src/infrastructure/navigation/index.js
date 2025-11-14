@@ -3,14 +3,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../../services/authentication/authentication.context';
-import { AccountNavigator } from './account.navigator';
 import { AppNavigator } from './app.navigator';
 
 const Stack = createNativeStackNavigator();
 
-// Root Navigator - conditionally shows Auth or App based on authentication
+// Root Navigator - always shows App (home as landing page)
 export const RootNavigator = () => {
-  const { isAuthenticated, isLoading, pendingVerificationEmail } = useAuth();
+  const { isLoading, pendingVerificationEmail } = useAuth();
   const navigationRef = useRef(null);
   const hasNavigatedToOTP = useRef(false);
 
@@ -21,9 +20,15 @@ export const RootNavigator = () => {
       hasNavigatedToOTP.current = true;
       setTimeout(() => {
         try {
-          navigationRef.current?.navigate('Account', {
-            screen: 'VerifyOTP',
-            params: { email: pendingVerificationEmail },
+          navigationRef.current?.navigate('App', {
+            screen: 'MainTabs',
+            params: {
+              screen: 'Account',
+              params: {
+                screen: 'VerifyOTP',
+                params: { email: pendingVerificationEmail },
+              },
+            },
           });
         } catch (error) {
           console.error('RootNavigator navigation error:', error);
@@ -43,20 +48,10 @@ export const RootNavigator = () => {
     );
   }
 
-  console.log('RootNavigator - isAuthenticated:', isAuthenticated, 'pendingVerificationEmail:', pendingVerificationEmail);
-
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <Stack.Screen name="App" component={AppNavigator} />
-        ) : (
-          <Stack.Screen 
-            name="Account" 
-            component={AccountNavigator}
-            key={pendingVerificationEmail || 'default'} // Force remount when pendingVerificationEmail changes
-          />
-        )}
+        <Stack.Screen name="App" component={AppNavigator} />
       </Stack.Navigator>
     </NavigationContainer>
   );

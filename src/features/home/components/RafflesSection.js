@@ -260,7 +260,11 @@ const RafflesSection = ({ raffles }) => {
   };
 
   const handleViewDetails = (raffleId) => {
-    navigation.navigate('Raffle', { raffleId });
+    // Navigate to Play tab, then to Raffle screen within PlayNavigator
+    navigation.navigate('Play', { 
+      screen: 'Raffle', 
+      params: { raffleId } 
+    });
   };
 
   return (

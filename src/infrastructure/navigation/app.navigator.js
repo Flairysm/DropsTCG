@@ -5,6 +5,8 @@ import React from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TopNavbar from '../../components/TopNavbar';
+import { useAuth } from '../../services/authentication/authentication.context';
+import { AccountNavigator } from './account.navigator';
 import { AdminNavigator } from './admin.navigator';
 import { HomeNavigator } from './home.navigator';
 import { PlayNavigator } from './play.navigator';
@@ -24,6 +26,7 @@ const TAB_COLORS = {
 const BottomTabNavigator = React.memo(() => {
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom || 0;
+  const { isAuthenticated } = useAuth();
 
   const screenOptions = React.useMemo(
     () => ({
@@ -113,10 +116,31 @@ const BottomTabNavigator = React.memo(() => {
     []
   );
 
+  // Protected screens that require authentication
+  const protectedScreens = ['Reload', 'Play', 'Vault', 'Profile'];
+
   return (
     <View style={{ flex: 1 }}>
       <TopNavbar />
-      <Tab.Navigator screenOptions={screenOptions}>
+      <Tab.Navigator
+        screenOptions={screenOptions}
+        screenListeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            // Check if the screen requires authentication
+            if (protectedScreens.includes(route.name) && !isAuthenticated) {
+              // Prevent default navigation
+              e.preventDefault();
+              // Navigate to login via parent navigator
+              const parent = navigation.getParent();
+              if (parent) {
+                parent.navigate('Account', { screen: 'Login' });
+              } else {
+                navigation.navigate('Account', { screen: 'Login' });
+              }
+            }
+          },
+        })}
+      >
         <Tab.Screen name="Home" component={HomeNavigator} options={homeOptions} />
         <Tab.Screen name="Reload" component={ReloadNavigator} options={reloadOptions} />
         <Tab.Screen name="Play" component={PlayNavigator} options={playOptions} />
@@ -134,6 +158,7 @@ export const AppNavigator = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
       <Stack.Screen name="Admin" component={AdminNavigator} />
+      <Stack.Screen name="Account" component={AccountNavigator} />
     </Stack.Navigator>
   );
 };

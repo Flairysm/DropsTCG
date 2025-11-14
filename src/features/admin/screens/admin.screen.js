@@ -5,12 +5,14 @@ import {
   Platform,
   TouchableOpacity,
   TextInput,
+  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import styled, { useTheme } from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../../services/authentication/authentication.context';
 
 const Container = styled(SafeAreaView)`
   flex: 1;
@@ -213,8 +215,27 @@ const tabs = [
 export default function AdminScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
+  const { isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Protect admin screen - redirect non-admins
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!isAdmin()) {
+        Alert.alert(
+          'Access Denied',
+          'You do not have permission to access this page.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+      }
+    }, [isAdmin, navigation])
+  );
 
   const handleBack = useCallback(() => {
     navigation.goBack();

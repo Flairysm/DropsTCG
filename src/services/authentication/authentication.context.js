@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }) => {
                 ...session.user,
                 username: profile.username || session.user.email?.split('@')[0],
                 tokenBalance: profile.token_balance || 0,
+                role: profile.role || 'user',
               });
             } else {
               setUser({
@@ -67,6 +68,7 @@ export const AuthProvider = ({ children }) => {
                 email: session.user.email,
                 username: session.user.email?.split('@')[0] || 'User',
                 tokenBalance: 0,
+                role: 'user',
               });
             }
           } catch (err) {
@@ -75,6 +77,7 @@ export const AuthProvider = ({ children }) => {
               email: session.user.email,
               username: session.user.email?.split('@')[0] || 'User',
               tokenBalance: 0,
+              role: 'user',
             });
           }
           setIsAuthenticated(true);
@@ -220,11 +223,17 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Helper function to check if user is admin
+  const isAdmin = useCallback(() => {
+    return user?.role === 'admin';
+  }, [user]);
+
   const value = {
     user,
     isAuthenticated,
     isLoading,
     pendingVerificationEmail,
+    isAdmin,
     login,
     logout,
     register,

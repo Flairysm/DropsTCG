@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import styled, { useTheme } from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
 import NotificationsPanel from './NotificationsPanel';
+import { useAuth } from '../services/authentication/authentication.context';
 
 const Container = styled.View`
   background-color: ${(props) => props.theme.colors.secondary};
@@ -134,6 +135,7 @@ const TopNavbar = React.memo(() => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const { isAuthenticated, isAdmin } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
@@ -141,7 +143,9 @@ const TopNavbar = React.memo(() => {
 
   // TODO: Replace with real state/API
   const unreadCount = 2;
-  const isAuthenticated = true; // TODO: Replace with actual auth check
+
+  // Protected routes that require authentication
+  const protectedRoutes = ['Reload', 'Play', 'Vault', 'Profile'];
 
   const toggleMenu = useCallback(() => {
     if (isMenuOpen) {
@@ -178,10 +182,21 @@ const TopNavbar = React.memo(() => {
 
   const handleNavigate = useCallback(
     (route) => {
-      navigation.navigate(route);
+      // Check if route requires authentication
+      if (protectedRoutes.includes(route) && !isAuthenticated) {
+        // Navigate to login via parent navigator
+        const parent = navigation.getParent();
+        if (parent) {
+          parent.navigate('Account', { screen: 'Login' });
+        } else {
+          navigation.navigate('Account', { screen: 'Login' });
+        }
+      } else {
+        navigation.navigate(route);
+      }
       toggleMenu();
     },
-    [navigation, toggleMenu]
+    [navigation, toggleMenu, isAuthenticated]
   );
 
   const translateY = useMemo(
@@ -242,10 +257,10 @@ const TopNavbar = React.memo(() => {
           </>
         ) : (
           <AuthButtons>
-            <LoginButton onPress={() => console.log('Navigate to login')}>
+            <LoginButton onPress={() => navigation.navigate('Account', { screen: 'Login' })}>
               <LoginButtonText>Login</LoginButtonText>
             </LoginButton>
-            <RegisterButton onPress={() => console.log('Navigate to register')}>
+            <RegisterButton onPress={() => navigation.navigate('Account', { screen: 'Register' })}>
               <RegisterButtonText>Register</RegisterButtonText>
             </RegisterButton>
           </AuthButtons>
@@ -254,19 +269,27 @@ const TopNavbar = React.memo(() => {
 
       {isMenuOpen && isAuthenticated && (
         <Dropdown style={dropdownStyle}>
-          {menuItems.map((item, index) => (
-            <MenuItem
-              key={item.name}
-              isLast={index === menuItems.length - 1}
-              onPress={() => handleNavigate(item.route)}
-              activeOpacity={0.7}
-            >
-              <MenuIcon>
-                <Ionicons name={item.icon} size={20} color={theme.colors.accent} />
-              </MenuIcon>
-              <MenuText>{item.name}</MenuText>
-            </MenuItem>
-          ))}
+          {menuItems
+            .filter((item) => {
+              // Only show Admin menu item for admins
+              if (item.name === 'Admin') {
+                return isAdmin();
+              }
+              return true;
+            })
+            .map((item, index, filteredItems) => (
+              <MenuItem
+                key={item.name}
+                isLast={index === filteredItems.length - 1}
+                onPress={() => handleNavigate(item.route)}
+                activeOpacity={0.7}
+              >
+                <MenuIcon>
+                  <Ionicons name={item.icon} size={20} color={theme.colors.accent} />
+                </MenuIcon>
+                <MenuText>{item.name}</MenuText>
+              </MenuItem>
+            ))}
         </Dropdown>
       )}
 

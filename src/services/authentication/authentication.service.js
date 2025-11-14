@@ -46,9 +46,42 @@ export const login = async (email, password) => {
     });
 
     if (error) {
+      // Provide user-friendly error messages
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error.message) {
+        const errorMsg = error.message.toLowerCase();
+        
+        // Check for specific error types
+        if (errorMsg.includes('email not confirmed') || 
+            errorMsg.includes('email not verified') ||
+            errorMsg.includes('email_not_confirmed')) {
+          errorMessage = 'Please verify your email address before signing in. Check your inbox for the verification link.';
+        } else if (errorMsg.includes('invalid login credentials') || 
+                   errorMsg.includes('invalid credentials') ||
+                   error.code === 'invalid_credentials' ||
+                   error.code === 'invalid_grant') {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (errorMsg.includes('too many requests') || 
+                   error.code === 'too_many_requests' ||
+                   error.code === 'rate_limit_exceeded') {
+          errorMessage = 'Too many login attempts. Please wait a few minutes and try again.';
+        } else if (errorMsg.includes('user not found') ||
+                   errorMsg.includes('user_not_found')) {
+          errorMessage = 'No account found with this email address. Please check your email or sign up.';
+        } else if (errorMsg.includes('network') || 
+                   errorMsg.includes('connection') ||
+                   errorMsg.includes('fetch')) {
+          errorMessage = 'Network error. Please check your internet connection and try again.';
+        } else {
+          // Use the error message if it's user-friendly, otherwise use generic message
+          errorMessage = error.message || 'Login failed. Please check your credentials and try again.';
+        }
+      }
+      
       return {
         success: false,
-        error: error.message || 'Login failed. Please check your credentials.',
+        error: errorMessage,
       };
     }
 
@@ -68,6 +101,7 @@ export const login = async (email, password) => {
             ...data.user,
             username: profile.username || data.user.email?.split('@')[0],
             tokenBalance: profile.token_balance || 0,
+            role: profile.role || 'user',
           };
         }
       } catch (err) {
@@ -83,6 +117,7 @@ export const login = async (email, password) => {
         email: data.user.email,
         username: data.user.email?.split('@')[0] || 'User',
         tokenBalance: 0,
+        role: 'user',
       },
       session: data.session,
     };
@@ -154,6 +189,7 @@ export const checkAuthStatus = async () => {
             ...session.user,
             username: profile.username || session.user.email?.split('@')[0],
             tokenBalance: profile.token_balance || 0,
+            role: profile.role || 'user',
           };
         }
       } catch (err) {
@@ -168,6 +204,7 @@ export const checkAuthStatus = async () => {
           email: session.user.email,
           username: session.user.email?.split('@')[0] || 'User',
           tokenBalance: 0,
+          role: 'user',
         },
       };
     }
@@ -331,6 +368,7 @@ export const verifyOTP = async (email, token) => {
           email: data.user.email,
           phone_number: phoneNumber,
           token_balance: 0,
+          role: 'user', // Default role is 'user', admins are set manually in Supabase
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -390,6 +428,7 @@ export const verifyOTP = async (email, token) => {
             ...data.user,
             username: profile.username || data.user.email?.split('@')[0],
             tokenBalance: profile.token_balance || 0,
+            role: profile.role || 'user',
           };
         }
       } catch (err) {
@@ -404,6 +443,7 @@ export const verifyOTP = async (email, token) => {
         email: data.user.email,
         username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'User',
         tokenBalance: 0,
+        role: 'user',
       },
       session: data.session,
     };

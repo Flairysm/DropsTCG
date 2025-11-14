@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { useAuth } from '../../../services/authentication/authentication.context';
 
@@ -99,12 +99,35 @@ const Input = styled.TextInput`
   min-height: 50px;
 `;
 
+const PasswordToggle = styled(TouchableOpacity)`
+  padding: 12px;
+  justify-content: center;
+  align-items: center;
+`;
+
 const ErrorText = styled.Text`
   color: ${(props) => props.theme.colors.error};
   font-size: 13px;
   margin-top: 8px;
   margin-left: 4px;
   font-weight: 500;
+`;
+
+const FieldError = styled.Text`
+  color: ${(props) => props.theme.colors.error};
+  font-size: 12px;
+  margin-top: 6px;
+  margin-left: 4px;
+  font-weight: 400;
+`;
+
+const SuccessText = styled.Text`
+  color: ${(props) => props.theme.colors.success || '#4ade80'};
+  font-size: 13px;
+  margin-top: 8px;
+  margin-left: 4px;
+  font-weight: 500;
+  text-align: center;
 `;
 
 const LoginButton = styled(TouchableOpacity)`
@@ -179,16 +202,68 @@ const LoginScreen = () => {
   const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  const validateEmail = (emailValue) => {
+    if (!emailValue.trim()) {
+      setEmailError('Email is required');
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailValue.trim())) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const validatePassword = (passwordValue) => {
+    if (!passwordValue.trim()) {
+      setPasswordError('Password is required');
+      return false;
+    }
+    if (passwordValue.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      return false;
+    }
+    setPasswordError('');
+    return true;
+  };
+
+  const handleEmailChange = (text) => {
+    setEmail(text);
+    setError('');
+    if (text.trim()) {
+      validateEmail(text);
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    setError('');
+    if (text.trim()) {
+      validatePassword(text);
+    } else {
+      setPasswordError('');
+    }
+  };
+
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      setError('Please enter both email and password');
+    setError('');
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    if (!isEmailValid || !isPasswordValid) {
       return;
     }
 
-    setError('');
     setIsLoggingIn(true);
 
     const result = await login(email.trim(), password);
@@ -196,8 +271,15 @@ const LoginScreen = () => {
     if (!result.success) {
       setError(result.error || 'Login failed. Please try again.');
       setIsLoggingIn(false);
+    } else {
+      // Show success message
+      Alert.alert(
+        'Welcome Back!',
+        'You have successfully logged in.',
+        [{ text: 'OK' }]
+      );
+      // Navigation will automatically switch to main app via RootNavigator
     }
-    // If successful, navigation will automatically switch to main app via RootNavigator
   };
 
   return (
@@ -222,48 +304,63 @@ const LoginScreen = () => {
               <Subtitle>Sign in to continue your DropsTCG journey</Subtitle>
 
               <InputContainer>
-                <InputWrapper>
+                <InputWrapper style={{ borderColor: emailError ? theme.colors.error : theme.colors.borderLight }}>
                   <InputIcon>
                     <Ionicons 
                       name="mail-outline" 
                       size={20} 
-                      color="rgba(255, 255, 255, 0.5)" 
+                      color={emailError ? theme.colors.error : "rgba(255, 255, 255, 0.5)"} 
                     />
                   </InputIcon>
                   <Input
                     placeholder="Email"
                     placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={handleEmailChange}
+                    onBlur={() => validateEmail(email)}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
                     autoCorrect={false}
                   />
                 </InputWrapper>
+                {emailError ? <FieldError>{emailError}</FieldError> : null}
               </InputContainer>
 
               <InputContainer>
-                <InputWrapper>
+                <InputWrapper style={{ borderColor: (passwordError || error) ? theme.colors.error : theme.colors.borderLight }}>
                   <InputIcon>
                     <Ionicons 
                       name="lock-closed-outline" 
                       size={20} 
-                      color="rgba(255, 255, 255, 0.5)" 
+                      color={(passwordError || error) ? theme.colors.error : "rgba(255, 255, 255, 0.5)"} 
                     />
                   </InputIcon>
                   <Input
                     placeholder="Password"
                     placeholderTextColor="rgba(255, 255, 255, 0.5)"
                     value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
+                    onChangeText={handlePasswordChange}
+                    onBlur={() => validatePassword(password)}
+                    secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoComplete="password"
                     autoCorrect={false}
                   />
+                  <PasswordToggle onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
+                    <Ionicons 
+                      name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                      size={20} 
+                      color="rgba(255, 255, 255, 0.5)" 
+                    />
+                  </PasswordToggle>
                 </InputWrapper>
-                {error ? <ErrorText>{error}</ErrorText> : null}
+                {passwordError ? <FieldError>{passwordError}</FieldError> : null}
+                {error ? (
+                  <ErrorText style={{ marginTop: passwordError ? 4 : 8 }}>
+                    {error}
+                  </ErrorText>
+                ) : null}
               </InputContainer>
 
               <LoginButton onPress={handleLogin} disabled={isLoggingIn || isLoading} activeOpacity={0.8}>
